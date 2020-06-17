@@ -1,0 +1,276 @@
+---
+title: "Projet_Stage"
+author: "Rose-Marie Fraboulet"
+output: html_document
+---
+
+# **Stage M1 - Analyse de l’hétérogénéité tumorale du cancer du pancréas par des approches single-cell**
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) #options du document html
+```
+
+## **Loading packages**
+```{r loading_packages, include=FALSE}
+library(dplyr) #data manipulation
+library(Seurat)
+library(patchwork) #plots
+library(ggplot2)
+library(sctransform) #normalization
+library(umap)
+library(tsne)
+library("writexl")
+```
+
+## **Loading dataset**
+```{r loading_dataset, echo=FALSE}
+load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Code/Projet.RData")
+pool
+```
+
+## **Standard pre-processing workflow - Data filtering**
+### Calculate the percentage of mitochondrial genes 
+```{r}
+pool[["percent.mt"]] <- PercentageFeatureSet(object = pool, pattern = "^MT-")
+#[[""]] : added a column "percent.mt" in the pool object 
+#number of mitochondrial genes for one cell / total number of genes in that cell * 100
+```
+
+```{r}
+head(x = pool@meta.data, 10)
+#The total number of molecules detected within a cell : nCount (nUMIs)
+#The number of genes detected in each cell : nFeature (nGenes)
+#The percentage of reads that map to the mitochondrial genome : percent.mt 
+```
+
+### Graphical visualization 
+#### Violin plot
+```{r}
+VlnPlot(pool, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+```
+
+#### Plot
+```{r}
+plot1 <- FeatureScatter(pool, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot1
+
+plot2 <- FeatureScatter(pool, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot2
+
+```
+
+```{r, include=FALSE}
+#nCounts control samples  < nCounts cancer samples
+#same proportion of percent.mt in each type of sample
+```
+
+#### Low quality cells
+<200 genes/cell and >10% mitochondrial genes were excluded 
+```{r}
+pool <- subset(pool, subset = nFeature_RNA > 200 & percent.mt < 10)
+pool
+```
+
+## **Normalizing data - Tutorial**
+
+## **Normalizing the data**
+```{r}
+#Normalizes the gene expression for each cell by the total expression, multiplies this by a scale factor (10 000) and log-transforms the result.
+pool <- NormalizeData(pool, normalization.method = "LogNormalize", scale.factor=10000)
+```
+
+## **Identification of highly variable features***
+```{r}
+#Calculates highly variable genes - Highly expressed in some cells, and lowly expressed in others
+pool <- FindVariableFeatures(object=pool, selection.method = "vst", nfeatures = 2000)
+pool
+head(x = HVFInfo(object = pool))
+
+#The 10 most higly variable genes
+top10_variablegenes <- head(VariableFeatures(pool), 10)
+top10_variablegenes
+#IGLL5, IGJ, REG3A, INS, REG1B, IAPP, PLA2G2A, FABP1, CCL19, CXCL10
+
+#plot3 <- VariableFeaturePlot(pool)
+#plot3
+
+plot4 <- LabelPoints(plot = plot3, points = top10_variablegenes, repel = TRUE, xnudge=0, ynudge=0)
+plot4
+
+#plot3 + plot4
+```
+
+## **Scaling the data**
+```{r}
+# Pre-processing step before PCA
+pool <- ScaleData(pool)
+pool
+```
+
+## **Normalizing data - SCTranform**
+```{r}
+# #SCTransform is an alternative normalization technique which replaces NormalizeData, FindVariableFeatures ad ScaleData functions
+# pool <- SCTransform(pool, vars.to.regress = "percent.mt", verbose = FALSE)
+```
+
+## **Perform linear dimensional reduction**
+### Dataset
+```{r}
+pool <- RunPCA(pool, features = VariableFeatures(object = pool))
+#print(pool[["pca"]], dims = 1:5, nfeatures = 5)
+#[[""]] : added a "pca" column in the pool object
+```
+
+### Visualization
+#### VizDimReduction
+```{r}
+VizDimLoadings(pool, dims = 1:2, reduction = "pca")
+```
+
+#### DimPlot
+```{r}
+DimPlot(pool, reduction = "pca", label=TRUE, repel=TRUE)
+```
+
+#### DimHeatMap
+```{r}
+DimHeatmap(pool, dims = 1:3, cells = 500, balanced = TRUE)
+#black = 0, purple = low, yellow = high
+```
+
+## **Determine the ‘dimensionality’ of the dataset**
+```{r}
+#pool <- JackStraw(pool, num.replicate = 100)
+#pool <- ScoreJackStraw(pool, dims = 1:20)
+#JackStrawPlot(pool, dims = 1:15)
+
+ElbowPlot(object=pool, ndims = 50, reduction = "pca")
+```
+
+## **Cluster the cell**
+### Shared Nearest Neighbor (SNN) Graph
+```{r}
+#Determine the k-nearest neighbors of each cell
+#PCs 1 to 10 were used for graph-based clustering
+pool <- FindNeighbors(pool, reduction='pca', dims = 1:10)
+
+#Determine the clusters of the dataset 
+#Res = 0.8 for PDAC samples 
+#Res = 1 for pooled cells from PDACs and controls
+#pool <- FindClusters(pool, resolution = 0.5) 
+#pool <- FindClusters(pool, resolution = 1.5) 
+pool <- FindClusters(pool, resolution = 1) 
+```
+
+#### Visualization 
+```{r}
+head(Idents(pool), 10)
+
+#Which cluster has been determined for each cell
+head(pool@meta.data, 10)
+
+#Delete a column :  pool[['RNA_snn_res.0.3']] <- NULL
+```
+
+## **Run non-linear dimensional reduction**
+### Uniform Manifold Approximation and Projection (UMAP) 
+```{r, include=FALSE}
+pool <- RunUMAP(pool, dims = 1:10)
+```
+
+```{r}
+plot5 <- DimPlot(pool, reduction = "umap", label=TRUE, repel=TRUE)
+plot5
+```
+
+### T-distributed stochastic neighbor embedding (tSNE)
+```{r, results="hide"}
+pool <- RunTSNE(pool, dims.use = 1:10)
+```
+
+```{r}
+plot6 <- DimPlot(object = pool, reduction = "tsne", label=TRUE, repel=TRUE)
+plot6
+```
+
+```{r}
+plot5 <- AugmentPlot(plot = plot5)
+plot6 <- AugmentPlot(plot = plot6)
+plot5 + plot6
+```
+
+## **Finding differentially expressed features (cluster biomarkers)**
+### Find markers for cluster 1
+```{r}
+#For example, cluster number 1
+cluster1.markers <- FindMarkers(pool, ident.1 = 1)
+head(cluster1.markers, n = 10)
+#pct.1 = quel pourcentage des cellules dans la condition 1 montrent une certaine expression pour ce gène
+#pct.2 = quel pourcentage des cellules dans la condition 2 montrent une certaine expression pour ce gène
+#avg_logFC = combien l'expression de ce gène est plus ou moins élevée dans le cluster choisi entre les conditions
+```
+
+### Find markers for every cluster compared to all remaining cells
+```{r}
+pool.markers <- FindAllMarkers(pool, only.pos = TRUE)
+pool.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
+head(pool.markers)
+```
+
+### Visualization 
+```{r}
+#For a specific marker
+feature <- c("MET")
+```
+
+#### Violin plot
+```{r}
+VlnPlot(pool, features = feature, pt.size= FALSE)
+```
+
+#### Feature plot
+```{r}
+FeaturePlot(pool, features = feature, label=TRUE, repel=TRUE)
+FeaturePlot(pool, features = feature, reduction = "tsne", label=TRUE, repel=TRUE)
+```
+
+#### DoHeatMap
+```{r}
+DoHeatmap(subset(pool, downsample = 10), features=feature, size=3)
+```
+
+### Top 100 differentially expressed genes for each cluster
+```{r, results="hide"}
+top100_markers <- pool.markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
+head(top100_markers)
+#DoHeatmap(pool, features = top100_markers$gene, size=3)
+```
+
+```{r}
+#write_xlsx(top100_markers, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/top100_markers.xlsx")
+```
+
+## **Assigning cell type identity to clusters**
+# ```{r}
+# experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='7', '28'='7', '19'='7', '33'='7')
+# 
+# #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
+# #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
+# 
+# new.cluster.ids <- c("Stellate", "Ductall cells 1", "Ductall cells 2", "Macrophages", "Endothelial cells", "Acinar cells", "Fibroblasts", "T/B cells", "Endocrine cells")
+# names(new.cluster.ids) <- levels(experiment.merged)
+# pool <- RenameIdents(experiment.merged, new.cluster.ids)
+# DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+# DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+# ```
+
+
+### MCP / T-B cells
+```{r}
+# mcp <- readRDS("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/mcpgenes.rda")
+
+load("C:/Users/frabo/Downloads/MCPcounter_1.1.0.tar/MCPcounter_1.1.0/MCPcounter/data/MCPcounterExampleData.RData")
+```
+
+
+
