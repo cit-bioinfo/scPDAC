@@ -7,11 +7,12 @@ output: html_document
 # **Stage M1 - Analyse de l’hétérogénéité tumorale du cancer du pancréas par des approches single-cell**
 
 ```{r setup, include=FALSE} 
-knitr::opts_chunk$set(echo=TRUE) #options du document html
+knitr::opts_chunk$set(echo=TRUE)
 ```
 
 ## **Loading packages**
 ```{r loading_packages, include=FALSE}
+library(data.table) #large data
 library(dplyr) #data manipulation
 library(Seurat)
 library(patchwork) #plots
@@ -24,7 +25,7 @@ library("writexl")
 
 ## **Loading dataset**
 ```{r loading_dataset, echo=FALSE}
-load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Code/Projet.RData")
+load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/projet.RData")
 pool
 ```
 
@@ -56,7 +57,6 @@ plot1
 
 plot2 <- FeatureScatter(pool, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 plot2
-
 ```
 
 ```{r, include=FALSE}
@@ -87,8 +87,8 @@ pool
 head(x = HVFInfo(object = pool))
 
 #The 10 most higly variable genes
-top10_variablegenes <- head(VariableFeatures(pool), 10)
-top10_variablegenes
+top10.variablegenes <- head(VariableFeatures(pool), 10)
+top10.variablegenes
 #IGLL5, IGJ, REG3A, INS, REG1B, IAPP, PLA2G2A, FABP1, CCL19, CXCL10
 
 #plot3 <- VariableFeaturePlot(pool)
@@ -107,8 +107,8 @@ pool <- ScaleData(pool)
 pool
 ```
 
-## **Normalizing data - SCTranform**
 ```{r}
+## **Normalizing data - SCTranform**
 # #SCTransform is an alternative normalization technique which replaces NormalizeData, FindVariableFeatures ad ScaleData functions
 # pool <- SCTransform(pool, vars.to.regress = "percent.mt", verbose = FALSE)
 ```
@@ -193,18 +193,12 @@ plot6 <- DimPlot(object = pool, reduction = "tsne", label=TRUE, repel=TRUE)
 plot6
 ```
 
-```{r}
-plot5 <- AugmentPlot(plot = plot5)
-plot6 <- AugmentPlot(plot = plot6)
-plot5 + plot6
-```
-
 ## **Finding differentially expressed features (cluster biomarkers)**
 ### Find markers for cluster 1
 ```{r}
 #For example, cluster number 1
-cluster1.markers <- FindMarkers(pool, ident.1 = 1)
-head(cluster1.markers, n = 10)
+cluster1_markers <- FindMarkers(pool, ident.1 = 1)
+head(cluster1_markers, n = 10)
 #pct.1 = quel pourcentage des cellules dans la condition 1 montrent une certaine expression pour ce gène
 #pct.2 = quel pourcentage des cellules dans la condition 2 montrent une certaine expression pour ce gène
 #avg_logFC = combien l'expression de ce gène est plus ou moins élevée dans le cluster choisi entre les conditions
@@ -212,9 +206,9 @@ head(cluster1.markers, n = 10)
 
 ### Find markers for every cluster compared to all remaining cells
 ```{r}
-pool.markers <- FindAllMarkers(pool, only.pos = TRUE)
-pool.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
-head(pool.markers)
+pool_markers <- FindAllMarkers(pool, only.pos = TRUE)
+pool_markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
+head(pool_markers)
 ```
 
 ### Visualization 
@@ -241,15 +235,16 @@ DoHeatmap(subset(pool, downsample = 10), features=feature, size=3)
 
 ### Top 100 differentially expressed genes for each cluster
 ```{r, results="hide"}
-top100_markers <- pool.markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
-head(top100_markers)
+top100.markers <- pool.markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
+head(top100.markers)
 #DoHeatmap(pool, features = top100_markers$gene, size=3)
 ```
 
 ```{r}
-#write_xlsx(top100_markers, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/top100_markers.xlsx")
+#write_xlsx(top100.markers, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/top100_markers.xlsx")
 ```
 
+```{r}
 ## **Assigning cell type identity to clusters**
 # ```{r}
 # experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='7', '28'='7', '19'='7', '33'='7')
@@ -262,15 +257,24 @@ head(top100_markers)
 # pool <- RenameIdents(experiment.merged, new.cluster.ids)
 # DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 # DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
-# ```
-
-
-### MCP / T-B cells
-```{r}
-# mcp <- readRDS("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/mcpgenes.rda")
-
-load("C:/Users/frabo/Downloads/MCPcounter_1.1.0.tar/MCPcounter_1.1.0/MCPcounter/data/MCPcounterExampleData.RData")
 ```
+
+## **Add metadata (cell.type) to the pool object**
+```{r}
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre #2/Stage M1/Projet/data/peng_data")
+#metadata <- fread("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/peng_data/all_celltype.txt", data.table=FALSE)
+
+# Rows are cell names and the columns are additional metadata fields.
+# rownames(metadata) <- metadata$cell.name
+# head(metadata)
+# metadata$cell.name <- NULL
+
+#Creation of pool2 object with metadata
+#pool2 <- CreateSeuratObject(counts = counts, meta.data = metadata)
+
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/test.RData")
+```
+
 
 
 
