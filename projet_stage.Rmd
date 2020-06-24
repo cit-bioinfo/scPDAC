@@ -70,6 +70,7 @@ library(cellassign)
 ### All objects
 ```{r}
 load("/home/rose/Documents/data_clusters.RData")
+load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/data_clusters.RData")
 pool
 pool2
 pool.init
