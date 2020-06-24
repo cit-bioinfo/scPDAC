@@ -38,13 +38,16 @@ library(tensorflow)
 #devtools::install_github("Irrationone/cellassign")
 library(SingleCellExperiment)
 library(cellassign)
+
+#singlecellexperiment
+library(scater)
 ```
 
 ## **Loading dataset**
 ### Pool
 ```{r, echo=FALSE}
 #load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/projet.RData")
-#load("/home/rose/Documents/projet.RData")
+load("/home/rose/Documents/projet_stage/data/projet.RData")
 ```
 
 ### Pool + metadata (labels) / Pool2
@@ -69,8 +72,8 @@ library(cellassign)
 
 ### All objects
 ```{r}
-load("/home/rose/Documents/data_clusters.RData")
-load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/data_clusters.RData")
+load("/home/rose/Documents//projet_stage/data/data_clusters.RData")
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/data_clusters.RData")
 pool
 pool2
 pool.init
@@ -304,9 +307,50 @@ clu_ann_sccatch <- scCATCH(clu_markers_sccatch$clu_markers, species = 'Human', c
 ```
 
 #### **cellasign**
+##### Example
 ```{r}
+data(example_sce)
+print(example_sce)
+print(head(example_sce$Group))
+data("example_marker_mat")
+print(example_marker_mat)
+s <- sizeFactors((example_sce))
+fit <- cellassign(exprs_obj = example_sce[rownames(example_marker_mat),], 
+                  marker_gene_info = example_marker_mat, 
+                  s = s, 
+                  learning_rate = 1e-2, 
+                  shrinkage = TRUE,
+                  verbose = FALSE)
 
+print(head(celltypes(fit)))
+
+data("example_TME_markers")
+print(example_TME_markers)
+names(example_TME_markers)
+marker_mat <- marker_list_to_mat(example_TME_markers$ensembl)
+marker_mat[1:3, 1:3]
+
+sce_marker <- sce[intersect(rownames(marker_mat), rownames(sce)),]
 ```
+
+##### With PDAC data
+```{r}
+# Converting the Seurat object to a SingleCellExperiment object
+pool2.sce <- as.SingleCellExperiment(pool2)
+print(pool2.sce)
+print(pool2.sce$cluster)
+
+#Create singlecellexperiment object by counts matrix
+sce <- SingleCellExperiment(list(counts=counts), colData=DataFrame(metadata))
+print(sce$cluster)
+
+#Creation of the list 
+#A list where each entry is named by a cell type and contains a character vector of gene names belonging to that cell type
+Idents(pool2) <- "cluster"
+pool2_markers <- FindAllMarkers(pool2, only.pos = TRUE)
+write_xlsx(pool2_markers, "~/Documents/projet_stage/data/pool2_markers.xlsx")
+```
+
 
 ### **Using cell labels - pool2**
 ```{r}
@@ -319,7 +363,7 @@ new.orig_ident.ids <- c("Control samples", "Cancer samples")
 names(new.orig_ident.ids) <- levels(experiment.merged2)
 pool2 <- RenameIdents(experiment.merged2, new.orig_ident.ids)
 
-plot6 <- DimPlot(pool2, reduction = "umap", pt.size = 0.5, cols=c("#99CCFFE6", "coral"))
+plot6 <- DimPlot(pool2, reduction = "umap", pt.size = 0.5, cols=c("lightblue", "lavender"))
 plot6 
 
 plot7 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="cluster") + NoLegend()
