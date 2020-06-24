@@ -14,31 +14,73 @@ knitr::opts_chunk$set(echo=TRUE)
 ```{r loading_packages, include=FALSE}
 library(data.table) #large data
 library(dplyr) #data manipulation
+
 library(Seurat)
 library(patchwork) #plots
 library(ggplot2)
-library(sctransform) #normalization
+#library(sctransform) #normalization
 library(umap)
 library(tsne)
+
 library("writexl")
+
+#scCatch
+install.packages(pkgs = 'devtools')
+devtools::install_github('ZJUFanLab/scCATCH')
+library(scCATCH)
+
+#cellasign 
+#install.packages("tensorflow")
+#install.packages("reticulate")
+library(reticulate)
+#py_install("tensorflow", pip=T)
+library(tensorflow)
+#install_tensorflow(extra_packages = "tensorflow-probability")
 ```
 
 ## **Loading dataset**
+### Pool
 ```{r loading_dataset, echo=FALSE}
-load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/projet.RData")
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/projet.RData")
+#load("~/Desktop/stage_rose/projet.RData")
+load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/data_clusters.RData")
+
 pool
+```
+
+### Pool + metadata (labels) 
+```{r, , echo=FALSE}
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre #2/Stage M1/Projet/data/peng_data")
+#metadata <- fread("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/peng_data/all_celltype.txt", data.table=FALSE)
+
+# Rows are cell names and the columns are additional metadata fields.
+# rownames(metadata) <- metadata$cell.name
+# head(metadata)
+# metadata$cell.name <- NULL
+
+#Creation of pool2 object with metadata
+#pool2 <- CreateSeuratObject(counts = counts, meta.data = metadata)
+pool2
+```
+
+### Pool.init 
+```{r}
+#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/init.RData")
+#load("~/Desktop/stage_rose/init.RData")
 ```
 
 ## **Standard pre-processing workflow - Data filtering**
 ### Calculate the percentage of mitochondrial genes 
 ```{r}
 pool[["percent.mt"]] <- PercentageFeatureSet(object = pool, pattern = "^MT-")
+pool2[["percent.mt"]] <- PercentageFeatureSet(object = pool2, pattern = "^MT-")
 #[[""]] : added a column "percent.mt" in the pool object 
 #number of mitochondrial genes for one cell / total number of genes in that cell * 100
 ```
 
 ```{r}
 head(x = pool@meta.data, 10)
+head(x = pool2@meta.data, 10)
 #The total number of molecules detected within a cell : nCount (nUMIs)
 #The number of genes detected in each cell : nFeature (nGenes)
 #The percentage of reads that map to the mitochondrial genome : percent.mt 
@@ -69,6 +111,8 @@ plot2
 ```{r}
 pool <- subset(pool, subset = nFeature_RNA > 200 & percent.mt < 10)
 pool
+pool2 <- subset(pool2, subset = nFeature_RNA > 200 & percent.mt < 10)
+pool2
 ```
 
 ## **Normalizing data - Tutorial**
@@ -77,18 +121,23 @@ pool
 ```{r}
 #Normalizes the gene expression for each cell by the total expression, multiplies this by a scale factor (10 000) and log-transforms the result.
 pool <- NormalizeData(pool, normalization.method = "LogNormalize", scale.factor=10000)
+pool2 <- NormalizeData(pool2, normalization.method = "LogNormalize", scale.factor=10000)
+pool.init <-  NormalizeData(pool.init, normalization.method = "LogNormalize", scale.factor=10000)
 ```
 
 ## **Identification of highly variable features***
 ```{r}
 #Calculates highly variable genes - Highly expressed in some cells, and lowly expressed in others
 pool <- FindVariableFeatures(object=pool, selection.method = "vst", nfeatures = 2000)
-pool
+pool2 <- FindVariableFeatures(object=pool2, selection.method = "vst", nfeatures = 2000)
 head(x = HVFInfo(object = pool))
+head(x = HVFInfo(object = pool2))
 
 #The 10 most higly variable genes
 top10.variablegenes <- head(VariableFeatures(pool), 10)
+top10.variablegenes2 <- head(VariableFeatures(pool2), 10)
 top10.variablegenes
+top10.variablegenes2
 #IGLL5, IGJ, REG3A, INS, REG1B, IAPP, PLA2G2A, FABP1, CCL19, CXCL10
 
 #plot3 <- VariableFeaturePlot(pool)
@@ -104,7 +153,8 @@ plot4
 ```{r}
 # Pre-processing step before PCA
 pool <- ScaleData(pool)
-pool
+pool2 <- ScaleData(pool2)
+pool2
 ```
 
 ```{r}
@@ -117,6 +167,7 @@ pool
 ### Dataset
 ```{r}
 pool <- RunPCA(pool, features = VariableFeatures(object = pool))
+pool2 <- RunPCA(pool2, features = VariableFeatures(object = pool2))
 #print(pool[["pca"]], dims = 1:5, nfeatures = 5)
 #[[""]] : added a "pca" column in the pool object
 ```
@@ -153,13 +204,13 @@ ElbowPlot(object=pool, ndims = 50, reduction = "pca")
 #Determine the k-nearest neighbors of each cell
 #PCs 1 to 10 were used for graph-based clustering
 pool <- FindNeighbors(pool, reduction='pca', dims = 1:10)
+pool2 <- FindNeighbors(pool2, reduction='pca', dims = 1:10)
 
 #Determine the clusters of the dataset 
 #Res = 0.8 for PDAC samples 
 #Res = 1 for pooled cells from PDACs and controls
-#pool <- FindClusters(pool, resolution = 0.5) 
-#pool <- FindClusters(pool, resolution = 1.5) 
 pool <- FindClusters(pool, resolution = 1) 
+pool2 <- FindClusters(pool2, resolution = 1)
 ```
 
 #### Visualization 
@@ -168,72 +219,71 @@ head(Idents(pool), 10)
 
 #Which cluster has been determined for each cell
 head(pool@meta.data, 10)
+head(pool2@meta.data, 10)
 
-#Delete a column :  pool[['RNA_snn_res.0.3']] <- NULL
+#Delete a column :  pool[['RNA_snn_res.1.5']] <- NULL
 ```
 
 ## **Run non-linear dimensional reduction**
 ### Uniform Manifold Approximation and Projection (UMAP) 
 ```{r, include=FALSE}
 pool <- RunUMAP(pool, dims = 1:10)
-```
-
-```{r}
-plot5 <- DimPlot(pool, reduction = "umap", label=TRUE, repel=TRUE)
-plot5
+pool2 <- RunUMAP(pool2, dims = 1:10)
 ```
 
 ### T-distributed stochastic neighbor embedding (tSNE)
 ```{r, results="hide"}
-pool <- RunTSNE(pool, dims.use = 1:10)
-```
-
-```{r}
-plot6 <- DimPlot(object = pool, reduction = "tsne", label=TRUE, repel=TRUE)
-plot6
+# pool2 <- RunTSNE(pool2, dims.use = 1:10)
+# 
+# plot8 <- DimPlot(object = pool2, reduction = "tsne", label=TRUE, repel=TRUE, group.by="orig.ident")
+# plot9 <- DimPlot(object = pool2, reduction = "tsne", label=TRUE, repel=TRUE, group.by="cluster") + NoLegend()
+# plot8 + plot9
 ```
 
 ## **Finding differentially expressed features (cluster biomarkers)**
-### Find markers for cluster 1
+
+### **A LA MAIN**
+#### Find markers for cluster 1
 ```{r}
 #For example, cluster number 1
-cluster1_markers <- FindMarkers(pool, ident.1 = 1)
+cluster1_markers <- FindMarkers(pool2, ident.1 = 1)
 head(cluster1_markers, n = 10)
 #pct.1 = quel pourcentage des cellules dans la condition 1 montrent une certaine expression pour ce gène
 #pct.2 = quel pourcentage des cellules dans la condition 2 montrent une certaine expression pour ce gène
 #avg_logFC = combien l'expression de ce gène est plus ou moins élevée dans le cluster choisi entre les conditions
 ```
 
-### Find markers for every cluster compared to all remaining cells
+#### Find markers for every cluster compared to all remaining cells
 ```{r}
 pool_markers <- FindAllMarkers(pool, only.pos = TRUE)
 pool_markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
 head(pool_markers)
 ```
 
-### Visualization 
+#### Visualization 
 ```{r}
 #For a specific marker
 feature <- c("MET")
+#The MET gene is present in the ductall cells 2 
 ```
 
-#### Violin plot
+##### Violin plot
 ```{r}
-VlnPlot(pool, features = feature, pt.size= FALSE)
+VlnPlot(pool, features = feature, pt.size= FALSE, group.by="cluster")
 ```
 
-#### Feature plot
+##### Feature plot
 ```{r}
 FeaturePlot(pool, features = feature, label=TRUE, repel=TRUE)
-FeaturePlot(pool, features = feature, reduction = "tsne", label=TRUE, repel=TRUE)
+#FeaturePlot(pool, features = feature, reduction = "tsne", label=TRUE, repel=TRUE)
 ```
 
-#### DoHeatMap
+##### DoHeatMap
 ```{r}
 DoHeatmap(subset(pool, downsample = 10), features=feature, size=3)
 ```
 
-### Top 100 differentially expressed genes for each cluster
+#### Top 100 differentially expressed genes for each cluster
 ```{r, results="hide"}
 top100.markers <- pool.markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
 head(top100.markers)
@@ -244,37 +294,117 @@ head(top100.markers)
 #write_xlsx(top100.markers, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/Data/top100_markers.xlsx")
 ```
 
+#### **Assigning cell type identity to clusters**
 ```{r}
-## **Assigning cell type identity to clusters**
-# ```{r}
-# experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='7', '28'='7', '19'='7', '33'='7')
-# 
-# #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
-# #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
-# 
-# new.cluster.ids <- c("Stellate", "Ductall cells 1", "Ductall cells 2", "Macrophages", "Endothelial cells", "Acinar cells", "Fibroblasts", "T/B cells", "Endocrine cells")
-# names(new.cluster.ids) <- levels(experiment.merged)
-# pool <- RenameIdents(experiment.merged, new.cluster.ids)
-# DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
-# DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='7', '28'='7', '19'='7', '33'='7')
+
+#DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
+#DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
+
+new.cluster.ids <- c("Stellate", "Ductall cells 1", "Ductall cells 2", "Macrophages", "Endothelial cells", "Acinar cells", "Fibroblasts", "T/B cells", "Endocrine cells")
+names(new.cluster.ids) <- levels(experiment.merged)
+pool <- RenameIdents(experiment.merged, new.cluster.ids)
+DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 ```
 
-## **Add metadata (cell.type) to the pool object**
+### **Clustering tools - En utilisant pool.init**
+
+#### **BuildClusterTree**
+
 ```{r}
-#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre #2/Stage M1/Projet/data/peng_data")
-#metadata <- fread("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/peng_data/all_celltype.txt", data.table=FALSE)
+nbt = BuildClusterTree(pool.init)
+Tool(object = nbt, slot = 'BuildClusterTree')
+PlotClusterTree(object = nbt)
+```
 
-# Rows are cell names and the columns are additional metadata fields.
-# rownames(metadata) <- metadata$cell.name
-# head(metadata)
-# metadata$cell.name <- NULL
+#### **scCATCH**
+```{r}
+clu_markers_sccatch <- findmarkergenes(pool.init, species = 'Human', cluster = 'All', match_CellMatch = TRUE, cancer = NULL, tissue = 'Pancreas', cell_min_pct = 0.25, logfc = 0.25, pvalue = 0.05)
+#large datasets > 10,000 cells or > 15 clusters
 
-#Creation of pool2 object with metadata
-#pool2 <- CreateSeuratObject(counts = counts, meta.data = metadata)
+clu_ann_sccatch <- scCATCH(clu_markers_sccatch$clu_markers, species = 'Human', cancer = NULL, tissue = 'Pancreas')
 
-#load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/test.RData")
+#write_xlsx(clu_ann_sccatch, "~/Desktop/stage_rose/clu_ann_sccatch.xlsx")
+```
+
+#### **cellasign**
+```{r}
+devtools::install_github("Irrationone/cellassign")
+install.packages("rlang")
+install.packages("SingleCellExperiment")
+library(SingleCellExperiment)
+library(cellassign)
+```
+
+### **Using cell labels**
+```{r}
+plot5 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="orig.ident")
+plot5
+
+experiment.merged2 <- RenameIdents(object = pool2, 'N11'='N1', 'N10'='N1', 'N9'='N1', 'N8'='N1', 'N7'='N1', 'N6'='N1', 'N5'='N1', 'N4'='N1', 'N3'='N1', 'N2'='N1', 'T2'='T1', 'T3'='T1', 'T4'='T1','T5'='T1','T6'='T1','T7'='T1','T8'='T1','T9'='T1','T10'='T1','T11'='T1','T12'='T1','T13'='T1','T14'='T1','T15'='T1','T16'='T1','T17'='T1','T18'='T1','T19'='T1','T20'='T1','T21'='T1','T22'='T1','T23'='T1','T24'='T1')
+#plot6 <-DimPlot(object = experiment.merged2, pt.size=0.5, label = T, reduction = "umap")
+new.orig_ident.ids <- c("Control samples", "Cancer samples")
+names(new.orig_ident.ids) <- levels(experiment.merged2)
+pool2 <- RenameIdents(experiment.merged2, new.orig_ident.ids)
+plot6 <- DimPlot(pool2, reduction = "umap", pt.size = 0.5, cols=c("#99CCFF", "coral"))
+plot6 
+
+plot7 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="cluster") + NoLegend()
+plot7
+
+plot6+plot7
+```
+
+### **Calculating the average gene expression within a cluster**
+```{r}
+Idents(pool2) <- "cluster"
+#Idents(pool2) <- "orig.ident"
+
+#How many cells are in each cluster
+table(Idents(pool2))
+
+#How many cells are in each sample
+table(pool2$orig.ident)
+
+#How many cells per sample
+table(Idents(pool2), pool2$orig.ident)
+
+cluster.averages <- AverageExpression(pool2)
+head(cluster.averages[["RNA"]][, 1:5])
+
+#Add cluster.averages to the pool2 object
+orig.levels <- levels(pool2)
+Idents(pool2) <- gsub(pattern = " ", replacement = "_", x = Idents(pool2))
+orig.levels <- gsub(pattern = " ", replacement = "_", x = orig.levels)
+levels(pool2) <- orig.levels
+cluster.averages <- AverageExpression(pool2, return.seurat = TRUE)
+cluster.averages
+
+CellScatter(cluster.averages, cell1 = "Ductal_cell_type_1", cell2 = "Ductal_cell_type_2")
+
+DoHeatmap(cluster.averages, features = unlist(TopFeatures(pool2[["pca"]], balanced = TRUE)), size = 3, 
+    draw.lines = FALSE)
+
+
+###MCPcounter
+mcp <- readRDS("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/supplementary_information/mcpgenes.rda")
+head(mcp)
 ```
 
 
+```{r}
+##Contengency table
+orig.ident <- pool2$orig.ident
+clusters <- pool$seurat_clusters
+
+contengency.table <- data.frame(orig.ident, clusters)
+
+table <- data.frame(metadata, orig.ident, clusters)
+
+
+write_xlsx(contengency.table, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/supplementary_information/contengency_table.xlsx")
+write_xlsx(table, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/supplementary_information/table.xlsx")
+```
 
 
