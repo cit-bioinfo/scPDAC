@@ -354,12 +354,19 @@ load("/home/rose/Documents/projet_stage/data/pool2_markers.RData")
 pool2_markers <- pool2_markers[6:7]
 
 #Creation of the list, where each entry is named by a cell type and contains a character vector of gene names belonging to that cell type
-list_pool2_markers <- lapply(split(pool2_markers[-1], pool2_markers[[1]]), function(x) unlist(x, use.names=FALSE))
-print(str(list_pool2_markers))  
+split_pool2_markers <- split(pool2_markers[2], pool2_markers[[1]])
+str(head(split_pool2_markers))
+
+#unlist_pool2_markers <- unlist(split_pool2_markers)
+#unlist_pool2_markers <- unlist(split_pool2_markers, use.names=FALSE)
+#head(unlist_pool2_markers)
+
+list_pool2_markers <- lapply(split_pool2_markers, function(x) unlist(x, use.names=FALSE))
+str(head(list_pool2_markers))  
 
 #Creation of the marker gene matrix
-matrix <- marker_list_to_mat(list_pool2_markers, include_other = FALSE)
-print(str(matrix))
+mat_pool2_markers <- marker_list_to_mat(list_pool2_markers, include_other = FALSE)
+mat_pool2_markers[1:10,]
 ```
 
 
