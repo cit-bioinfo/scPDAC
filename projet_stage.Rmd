@@ -67,7 +67,7 @@ load("/home/rose/Documents/projet_stage/data/projet.RData")
 ### Pool.init 
 ```{r}
 #load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/init.RData")
-#load("/home/rose/Documents/init.RData")
+load("/home/rose/Documents//projet_stage/data/init.RData")
 ```
 
 ### All objects
@@ -315,6 +315,7 @@ print(head(example_sce$Group))
 data("example_marker_mat")
 print(example_marker_mat)
 s <- sizeFactors((example_sce))
+print(s)
 fit <- cellassign(exprs_obj = example_sce[rownames(example_marker_mat),], 
                   marker_gene_info = example_marker_mat, 
                   s = s, 
@@ -334,16 +335,23 @@ sce_marker <- sce[intersect(rownames(marker_mat), rownames(sce)),]
 ```
 
 ##### With PDAC data
+###### Data import
 ```{r}
+load("/home/rose/Documents/projet_stage/data/cellasign.RData")
+
 #SingleCellExperiment object
 ## Converting the Seurat object to a SingleCellExperiment object
-pool2.sce <- as.SingleCellExperiment(pool2)
-print(pool2.sce)
-print(pool2.sce$cluster)
+Idents(pool2) <- "cluster"
+pool2_sce <- as.SingleCellExperiment(pool2)
+print(pool2_sce)
+print(head(pool2_sce$cluster))
 
 ## Create SingleCellExperiment object by counts matrix
-sce <- SingleCellExperiment(list(counts=counts), colData=DataFrame(metadata))
-print(sce$cluster)
+counts2 <- data.matrix(counts, rownames.force = NA)
+metadata2 <- data.matrix(metadata, rownames.force = NA)
+sce <- SingleCellExperiment(list(counts=counts2), colData=DataFrame(metadata2))
+sce
+print(head(sce$cluster))
 
 #Find all markers for pool2
 Idents(pool2) <- "cluster"
@@ -367,7 +375,24 @@ str(head(list_pool2_markers))
 #Creation of the marker gene matrix
 mat_pool2_markers <- marker_list_to_mat(list_pool2_markers, include_other = FALSE)
 mat_pool2_markers[1:10,]
+
+#frame_mat_pool2_markers <- as.data.frame(mat_pool2_markers)
+#write_xlsx(frame_mat_pool2_markers, "~/Documents/projet_stage/data/mat_pool2_markers.xlsx")
 ```
+
+###### Cellasign
+```{r}
+#Size factor for each cell 
+library(scran)
+sce <- computeSumFactors(sce)
+head(sizeFactors(sce))
+s <- sizeFactors(sce)
+
+fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE)
+
+
+```
+
 
 
 ### **Using cell labels - pool2**
