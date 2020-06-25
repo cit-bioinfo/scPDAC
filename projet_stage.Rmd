@@ -307,51 +307,15 @@ clu_ann_sccatch <- scCATCH(clu_markers_sccatch$clu_markers, species = 'Human', c
 ```
 
 #### **cellasign**
-##### Example
-```{r}
-data(example_sce)
-print(example_sce)
-print(head(example_sce$Group))
-data("example_marker_mat")
-print(example_marker_mat)
-s <- sizeFactors((example_sce))
-print(s)
-fit <- cellassign(exprs_obj = example_sce[rownames(example_marker_mat),], 
-                  marker_gene_info = example_marker_mat, 
-                  s = s, 
-                  learning_rate = 1e-2, 
-                  shrinkage = TRUE,
-                  verbose = FALSE)
-
-print(head(celltypes(fit)))
-
-data("example_TME_markers")
-print(example_TME_markers)
-names(example_TME_markers)
-marker_mat <- marker_list_to_mat(example_TME_markers$ensembl)
-marker_mat[1:3, 1:3]
-
-sce_marker <- sce[intersect(rownames(marker_mat), rownames(sce)),]
-```
-
-##### With PDAC data
 ###### Data import
 ```{r}
-load("/home/rose/Documents/projet_stage/data/cellasign.RData")
-
-#SingleCellExperiment object
-## Converting the Seurat object to a SingleCellExperiment object
-Idents(pool2) <- "cluster"
-pool2_sce <- as.SingleCellExperiment(pool2)
-print(pool2_sce)
-print(head(pool2_sce$cluster))
+#load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
 
 ## Create SingleCellExperiment object by counts matrix
-counts2 <- data.matrix(counts, rownames.force = NA)
-metadata2 <- data.matrix(metadata, rownames.force = NA)
+counts2 <- data.matrix(counts, rownames.force = NA) #matrix
+metadata2 <- data.matrix(metadata, rownames.force = NA) #cell_type 
 sce <- SingleCellExperiment(list(counts=counts2), colData=DataFrame(metadata2))
-sce
-print(head(sce$cluster))
+print(sce)
 
 #Find all markers for pool2
 Idents(pool2) <- "cluster"
@@ -380,17 +344,18 @@ mat_pool2_markers[1:10,]
 #write_xlsx(frame_mat_pool2_markers, "~/Documents/projet_stage/data/mat_pool2_markers.xlsx")
 ```
 
-###### Cellasign
+###### cellasign tool
 ```{r}
 #Size factor for each cell 
 library(scran)
 sce <- computeSumFactors(sce)
 head(sizeFactors(sce))
 s <- sizeFactors(sce)
+s
 
-fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE)
+fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) #error, session avorted
 
-
+#metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
 ```
 
 
