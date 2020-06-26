@@ -447,6 +447,12 @@ library(infercnv)
 #### Example
 ##### Create infercnv object
 ```{r}
+
+#3 files 
+# - raw counts matric of genes x cells (counts)
+# - annotation file, cell type (metadata)
+# - gene ordering file, chromosomal location for each gene 
+
 infercnv_obj = CreateInfercnvObject(raw_counts_matrix=system.file("extdata", "oligodendroglioma_expression_downsampled.counts.matrix.gz", package = "infercnv"),
                                     annotations_file=system.file("extdata", "oligodendroglioma_annotations_downsampled.txt", package = "infercnv"),
                                     delim="\t",
