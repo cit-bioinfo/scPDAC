@@ -434,7 +434,7 @@ table <- data.frame(metadata, orig.ident, clusters)
 ### **inferCNV**
 #### Install packages
 ```{r}
-#jagsa
+#jags
 install.packages("rjags")
 
 #inferCNV
@@ -465,29 +465,4 @@ infercnv_obj = readRDS('reference_grouped_cell_indices.infercnv_obj')
 
 plot_cnv(infercnv_obj)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
