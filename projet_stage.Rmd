@@ -510,6 +510,7 @@ load("~/Documents/projet_stage/data/inferCNV/inferCNV.RData")
 #Create the inferCNV object 
 infercnv_objt <- CreateInfercnvObject(counts, annotations_file="~/Documents/projet_stage/data/inferCNV/metadata.txt", gene_order_file ="~/Documents/projet_stage/data/inferCNV/gen_order.txt", ref_group_names=NULL)
 
-#
+#Run the standard infercnv procedure
+
 ```
 
