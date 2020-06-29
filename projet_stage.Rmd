@@ -185,6 +185,7 @@ ElbowPlot(object=pool, ndims = 50, reduction = "pca")
 pool <- FindNeighbors(pool, reduction='pca', dims = 1:10)
 
 pool <- FindClusters(pool, resolution = 1) 
+pool.init <- FindClusters(pool.init, resolution = 0.8)
 #Res = 0.8 for PDAC samples 
 #Res = 1 for pooled cells from PDACs and controls
 ```
@@ -294,6 +295,10 @@ DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLe
 #cluster_tree = BuildClusterTree(pool.init)
 #Tool(object = cluster_tree, slot = 'BuildClusterTree')
 #PlotClusterTree(object = cluster_tree)
+
+#library(clustree)
+#head((pool.init@meta.data))
+#clustree(pool.init)
 ```
 
 #### **scCATCH**
