@@ -41,6 +41,17 @@ library(cellassign)
 
 #singlecellexperiment
 library(scater)
+
+#inferCNV
+#install.packages("rjags")
+library(rjags)
+
+#inferCNV package from Bioconductor
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#      install.packages("BiocManager")
+# BiocManager::install("infercnv")
+library(infercnv)
+```
 ```
 
 ## **Loading dataset**
@@ -437,42 +448,6 @@ table <- data.frame(metadata, orig.ident, clusters)
 ```
 
 ### **inferCNV**
-#### Install packages
-```{r}
-#jags
-#install.packages("rjags")
-library(rjags)
-
-#inferCNV package from Bioconductor
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#      install.packages("BiocManager")
-# BiocManager::install("infercnv")
-library(infercnv)
-```
-
-#### Example 
-```{r}
-#3 files required
-# - raw counts matrix of genes x cells (counts file)
-# - annotations file, tumor VS normal (metadata file)
-# - gene ordering file, chromosomal location for each gene 
-
-infercnv_obj = CreateInfercnvObject(raw_counts_matrix=system.file("extdata", "oligodendroglioma_expression_downsampled.counts.matrix.gz", package = "infercnv"),
-                                    annotations_file=system.file("extdata", "oligodendroglioma_annotations_downsampled.txt", package = "infercnv"),
-                                    delim="\t",
-                                    gene_order_file=system.file("extdata", "gencode_downsampled.EXAMPLE_ONLY_DONT_REUSE.txt", package = "infercnv"),
-                                    ref_group_names=c("Microglia/Macrophage","Oligodendrocytes (non-malignant)")) 
-
-
-infercnv_obj = infercnv::run(infercnv_obj,
-                             cutoff=1, 
-                             out_dir=tempfile(), 
-                             cluster_by_groups=TRUE, 
-                             denoise=TRUE,
-                             HMM=TRUE)
-```
-
-#### With PDAC data 
 ##### Loading files
 ```{r}
 #counts matrix
@@ -500,7 +475,7 @@ head(gen_order)
 names(gen_order) <- NULL
 head(gen_order)
 
-write.table(gen_order, file="~/Documents/projet_stage/data/inferCNV/gen_order.txt", quote=FALSE, sep="\t", row.names=F)
+#write.table(gen_order, file="~/Documents/projet_stage/data/inferCNV/gen_order.txt", quote=FALSE, sep="\t", row.names=F)
 
 load("~/Documents/projet_stage/data/inferCNV/inferCNV.RData")
 ```
@@ -511,6 +486,31 @@ load("~/Documents/projet_stage/data/inferCNV/inferCNV.RData")
 infercnv_objt <- CreateInfercnvObject(counts, annotations_file="~/Documents/projet_stage/data/inferCNV/metadata.txt", gene_order_file ="~/Documents/projet_stage/data/inferCNV/gen_order.txt", ref_group_names=NULL)
 
 #Run the standard infercnv procedure
+infercnv_objt = infercnv::run(infercnv_objt,
+                             cutoff=0, 
+                             out_dir=tempfile(), 
+                             cluster_by_groups=FALSE, 
+                             denoise=TRUE,
+                             HMM=TRUE,
+                             noise_filter = 0.2)
+#session aborted at step 2 : filtering genes 
+```
 
+### **Analysis**
+#### POOL 
+```{r}
+#Extract data from seurat object
+#head(pool@meta.data, 10)
+
+write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+
+write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+```
+
+#### POOL2
+```{r}
+write.table(pool2@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool2.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+
+write.table(pool2@meta.data, file="~/Documents/projet_stage/data/analysis/active_ident_pool2.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 ```
 
