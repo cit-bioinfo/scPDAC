@@ -476,27 +476,40 @@ infercnv_obj = infercnv::run(infercnv_obj,
 ##### Loading files
 ```{r}
 #counts matrix
-counts
+load("~/Documents/projet_stage/data/Peng_Data.RData")
+#write.table(counts, file="~/Documents/projet_stage/data/inferCNV/counts.txt")
 
 #annotations file 
 metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
 metadata <- as.data.frame(metadata)
 names(metadata) <- NULL
 head(metadata)
+#write.table(metadata, file="~/Documents/projet_stage/data/inferCNV/metadata.txt", quote=F, sep="\t", row.names=F)
 
 #gene order file 
 gene_list <- data.frame(row.names(counts))
-gen_code <- read.delim("~/Documents/projet_stage/data/gencode_v19_gene_pos.txt")
-names(gen_code) <- c("gene", "chr", "gene span", "gene span")
+gen_code <- read.delim("~/Documents/projet_stage/data/gencode_v19_gene_pos.txt",header=F)
+names(gen_code) <- c("gene", "chr", "gene span1", "gene span2")
 names(gene_list) <- c("gene")
 
-gen_order<- merge(gene_list, gen_code, by="gene")
+gen_order <- merge(gene_list, gen_code, by="gene")
 head(gen_order)
 #loss of 170 genes
 
 #no header
 names(gen_order) <- NULL
 head(gen_order)
+
+write.table(gen_order, file="~/Documents/projet_stage/data/inferCNV/gen_order.txt", quote=FALSE, sep="\t", row.names=F)
+
+load("~/Documents/projet_stage/data/inferCNV/inferCNV.RData")
 ```
 
-##### 
+##### inferCNV 
+```{r}
+#Create the inferCNV object 
+infercnv_objt <- CreateInfercnvObject(counts, annotations_file="~/Documents/projet_stage/data/inferCNV/metadata.txt", gene_order_file ="~/Documents/projet_stage/data/inferCNV/gen_order.txt", ref_group_names=NULL)
+
+#
+```
+
