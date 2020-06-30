@@ -502,7 +502,7 @@ infercnv_objt = infercnv::run(infercnv_objt,
 #Extract data from seurat object
 #head(pool@meta.data, 10)
 
-write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool.csv", sep="\t", row.names=T, col.names=T, quote=F)
 
 write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 ```
