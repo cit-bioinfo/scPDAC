@@ -325,7 +325,7 @@ clu_ann_sccatch <- scCATCH(clu_markers_sccatch$clu_markers, species = 'Human', c
 #### **cellasign**
 ###### Data import
 ```{r}
-#load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
+load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
 
 ## Create SingleCellExperiment object by counts matrix
 counts2 <- data.matrix(counts, rownames.force = NA) #matrix
@@ -345,9 +345,9 @@ pool2_markers <- pool2_markers[6:7]
 split_pool2_markers <- split(pool2_markers[2], pool2_markers[[1]])
 str(head(split_pool2_markers))
 
-#unlist_pool2_markers <- unlist(split_pool2_markers)
-#unlist_pool2_markers <- unlist(split_pool2_markers, use.names=FALSE)
-#head(unlist_pool2_markers)
+unlist_pool2_markers <- unlist(split_pool2_markers)
+unlist_pool2_markers <- unlist(split_pool2_markers, use.names=FALSE)
+head(unlist_pool2_markers)
 
 list_pool2_markers <- lapply(split_pool2_markers, function(x) unlist(x, use.names=FALSE))
 str(head(list_pool2_markers))  
@@ -369,19 +369,13 @@ head(sizeFactors(sce))
 s <- sizeFactors(sce)
 s
 
-fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) #error, session avorted
+fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
+#return cellasign object
+#error, session avorted
 
-metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
+#metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
 ```
 
-###### with 1000 cells
-```{r}
-## Create Seurat object by counts matrix 
-# sce2 <- CreateSeuratObject(counts, min.cells = 100)
-# sce2 <- as.SingleCellExperiment(sce2)
-# sce2 <- SingleCellExperiment(colData=DataFrame(metadata2))
-# sce2
-```
 
 ### **Using cell labels - pool2**
 ```{r}
@@ -410,8 +404,9 @@ Idents(pool2) <- "cluster"
 table(Idents(pool2))
 
 #How many cells are in each sample
-table(pool2$orig.ident)
+prop.table(pool2$orig.ident)
 
+pool2$orig.ident <- as.numeric(as.character(pool2$orig.ident))
 #How many cells per sample
 table(Idents(pool2), pool2$orig.ident)
 
@@ -469,7 +464,7 @@ names(gene_list) <- c("gene")
 
 gen_order <- merge(gene_list, gen_code, by="gene")
 head(gen_order)
-#loss of 170 genes
+#loss of 170 genes 
 
 #no header
 names(gen_order) <- NULL
