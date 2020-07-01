@@ -24,8 +24,8 @@ library(tsne)
 library("writexl")
 
 #scCatch
-##install.packages(pkgs = 'devtools')
-##devtools::install_github('ZJUFanLab/scCATCH')
+install.packages(pkgs = 'devtools')
+devtools::install_github('ZJUFanLab/scCATCH')
 library(scCATCH)
 
 #cellasign 
@@ -58,7 +58,8 @@ library(infercnv)
 ### Pool
 ```{r, echo=FALSE}
 #load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/projet.RData")
-load("/home/rose/Documents/projet_stage/data/projet.RData")
+#load("/home/rose/Documents/projet_stage/data/projet.RData")
+load("/home/rose/Documents//projet_stage/data/data/pool_object.RData")
 ```
 
 ### Pool + metadata (labels) / Pool2
@@ -78,16 +79,13 @@ load("/home/rose/Documents/projet_stage/data/projet.RData")
 ### Pool.init 
 ```{r}
 #load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/init.RData")
-load("/home/rose/Documents//projet_stage/data/init.RData")
+#load("/home/rose/Documents//projet_stage/data/init.RData")
 ```
 
 ### All objects
 ```{r}
-load("/home/rose/Documents//projet_stage/data/data_clusters.RData")
+#load("/home/rose/Documents//projet_stage/data/data_clusters.RData")
 #load("~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/code/data_clusters.RData")
-pool
-pool2
-pool.init
 ```
 
 ## **Standard pre-processing workflow - Data filtering**
@@ -196,7 +194,6 @@ ElbowPlot(object=pool, ndims = 50, reduction = "pca")
 pool <- FindNeighbors(pool, reduction='pca', dims = 1:10)
 
 pool <- FindClusters(pool, resolution = 1) 
-pool.init <- FindClusters(pool.init, resolution = 0.8)
 #Res = 0.8 for PDAC samples 
 #Res = 1 for pooled cells from PDACs and controls
 ```
@@ -269,7 +266,7 @@ DoHeatmap(subset(pool, downsample = 10), features=feature, size=3)
 
 #### Top 100 differentially expressed genes for each cluster
 ```{r, results="hide"}
-top100.markers <- pool.markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
+top100.markers <- pool_markers %>% group_by(cluster) %>% top_n(n = 100, wt = avg_logFC)
 head(top100.markers)
 #DoHeatmap(pool, features = top100_markers$gene, size=3)
 ```
@@ -282,17 +279,26 @@ head(top100.markers)
 
 #### **Assigning cell type identity to clusters**
 ```{r}
-experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='7', '28'='7', '19'='7', '33'='7')
+experiment.merged <- RenameIdents(object = pool.init, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='19', '28'='19')
 
-#DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
+DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
 #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
 
-new.cluster.ids <- c("Stellate", "Ductall cells 1", "Ductall cells 2", "Macrophages", "Endothelial cells", "Acinar cells", "Fibroblasts", "T/B cells", "Endocrine cells")
+new.cluster.ids <- c("Stellate cell", "Ductall cell 1", "Ductall cell 2", "Macrophage", "Endothelial cell", "Acinar cell", "Fibroblast", "T cell", "B cell", "Endocrine cell")
 names(new.cluster.ids) <- levels(experiment.merged)
-pool <- RenameIdents(experiment.merged, new.cluster.ids)
+pool.init <- RenameIdents(experiment.merged, new.cluster.ids)
 
-DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+DimPlot(pool.init, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 #DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+
+#add metadata_peng_all to pool object 
+#metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
+#metadata <- as.data.frame(metadata)
+#row.names(metadata) <- metadata$cell.name
+#metadata$cell.name <- NULL
+
+#pool.init <- AddMetaData(pool.init, metadata = metadata, col.name="peng_all_annotations")
+#pool <- pool.init
 ```
 
 ### **Clustering tools - pool.init**
@@ -313,18 +319,19 @@ DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLe
 
 #### **scCATCH**
 ```{r}
-clu_markers_sccatch <- findmarkergenes(pool.init, species = 'Human', cluster = 'All', match_CellMatch = TRUE, cancer = NULL, tissue = 'Pancreas', cell_min_pct = 0.25, logfc = 0.25, pvalue = 0.05)
+#penser à faire normalisation, scale, runPCA, findneighbors et findclusters AV de run ces commandes : pre-processing 
+clu_markers_sccatch <- findmarkergenes(pool, species = 'Human', cluster = 'All', match_CellMatch = TRUE, cancer = NULL, tissue = 'Pancreas', cell_min_pct = 0.25, logfc = 0.25, pvalue = 0.05)
 #large datasets > 10,000 cells or > 15 clusters
 
 clu_ann_sccatch <- scCATCH(clu_markers_sccatch$clu_markers, species = 'Human', cancer = NULL, tissue = 'Pancreas')
 
-#write_xlsx(clu_ann_sccatch, "~/Desktop/stage_rose/clu_ann_sccatch.xlsx")
+write_xlsx(clu_ann_sccatch, "/home/rose/Documents/projet_stage/data/scCATCH/clu_ann_sccatch.xlsx")
 ```
 
 #### **cellasign**
 ###### Data import
 ```{r}
-load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
+#load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
 
 ## Create SingleCellExperiment object by counts matrix
 counts2 <- data.matrix(counts, rownames.force = NA) #matrix
@@ -510,16 +517,9 @@ infercnv_objt = infercnv::run(infercnv_objt,
 #Extract data from seurat object
 #head(pool@meta.data, 10)
 
-write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool.csv", sep="\t", row.names=T, col.names=T, quote=F)
+write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 
-write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
-
+write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 ```
 
-#### POOL2
-```{r}
-write.table(pool2@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool2.tsv", sep="\t", row.names=T, col.names=T, quote=F)
-
-write.table(pool2@meta.data, file="~/Documents/projet_stage/data/analysis/active_ident_pool2.tsv", sep="\t", row.names=T, col.names=T, quote=F)
-```
 
