@@ -221,7 +221,6 @@ pool <- RunUMAP(pool, dims = 1:10)
 ### T-distributed stochastic neighbor embedding (tSNE)
 ```{r, results="hide"}
 # pool <- RunTSNE(pool, dims.use = 1:10)
-# 
 # plot8 <- DimPlot(object = pool, reduction = "tsne", label=TRUE, repel=TRUE, group.by="orig.ident")
 # plot9 <- DimPlot(object = pool, reduction = "tsne", label=TRUE, repel=TRUE, group.by="cluster") + NoLegend()
 # plot8 + plot9
@@ -335,7 +334,7 @@ print(sce)
 
 #Find all markers for pool2
 Idents(pool2) <- "cluster"
-pool2_markers <- FindAllMarkers(pool2, only.pos = TRUE)
+pool2_markers <- FindAllMarkers(pool2, only.pos = TRUE) 
 #write_xlsx(pool2_markers, "~/Documents/projet_stage/data/pool2_markers.xlsx")
 load("/home/rose/Documents/projet_stage/data/pool2_markers.RData")
 
@@ -368,6 +367,8 @@ sce <- computeSumFactors(sce)
 head(sizeFactors(sce))
 s <- sizeFactors(sce)
 s
+
+dim(mat_pool2_markers)
 
 fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
 #return cellasign object
@@ -447,14 +448,26 @@ table <- data.frame(metadata, orig.ident, clusters)
 ```{r}
 #counts matrix
 load("~/Documents/projet_stage/data/Peng_Data.RData")
-#write.table(counts, file="~/Documents/projet_stage/data/inferCNV/counts.txt")
+#write.table(counts, file="~/Documents/projet_stage/data/inferCNV/counts.txt") 
 
 #annotations file 
-metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
-metadata <- as.data.frame(metadata)
+
+#with annotation for cell type
+#metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
+#metadata <- as.data.frame(metadata)
 names(metadata) <- NULL
 head(metadata)
 #write.table(metadata, file="~/Documents/projet_stage/data/inferCNV/metadata.txt", quote=F, sep="\t", row.names=F)
+
+#with cluster numbers
+#metadata_pool_infercnv <- metadata_pool
+#metadata_pool_infercnv <- metadata_pool_infercnv[,-(2:7)]
+#names(metadata_pool_infercnv)[names(metadata_pool_infercnv) == "seurat_clusters"] <- "cluster"
+#write.table(metadata_pool_infercnv, file="~/Documents/projet_stage/data/metadata_pool_infercnv", sep="\t", row.names=F, col.names=T, quote=F)      
+#row.names(metadata_pool_infercnv) <- metadata_pool_infercnv$cell
+#names(metadata_pool_infercnv) <- NULL
+#metadata_pool_infercnv <- metadata_pool_infercnv[,-1]
+metadata_pool_infercnv <- fread("~/Documents/projet_stage/data/metadata_pool_infercnv")
 
 #gene order file 
 gene_list <- data.frame(row.names(counts))
@@ -478,7 +491,7 @@ load("~/Documents/projet_stage/data/inferCNV/inferCNV.RData")
 ##### inferCNV 
 ```{r}
 #Create the inferCNV object 
-infercnv_objt <- CreateInfercnvObject(counts, annotations_file="~/Documents/projet_stage/data/inferCNV/metadata.txt", gene_order_file ="~/Documents/projet_stage/data/inferCNV/gen_order.txt", ref_group_names=NULL)
+infercnv_objt <- CreateInfercnvObject(counts, annotations_file="~/Documents/projet_stage/data/metadata_pool_infercnv", gene_order_file ="~/Documents/projet_stage/data/inferCNV/gen_order.txt", ref_group_names=NULL)
 
 #Run the standard infercnv procedure
 infercnv_objt = infercnv::run(infercnv_objt,
@@ -500,6 +513,7 @@ infercnv_objt = infercnv::run(infercnv_objt,
 write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool.csv", sep="\t", row.names=T, col.names=T, quote=F)
 
 write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+
 ```
 
 #### POOL2
