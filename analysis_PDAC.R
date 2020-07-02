@@ -1,7 +1,6 @@
 #Loading dataset 
 load("~/Documents/projet_stage/data/data/pool_object.RData")
 load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RData")
-library(ggplot2)
 
 #Data treatment 
 #Add metadata
@@ -15,8 +14,8 @@ library(ggplot2)
 #active_ident_pool_object <- active_ident_pool_object[-1,]
 #colnames(active_ident_pool_object) <- c("cell", "my_annotations")
 #metadata_pool_object <- merge(active_ident_pool_object, metadata_pool_object, by="cell")
-#metadata_pool_object$RNA_snn_res_1 <- NULL
-#metadata_pool_object <- metadata_pool_object[, c(1, 4, 5, 6, 3, 7, 2, 8)]
+#metadata_pool_object$my_annotations <- NULL
+#metadata_pool_object <- metadata_pool_object[, c(1, 3, 4, 5, 6, 7, 8, 2, 9)]
 #write.table(metadata_pool_object, file="~/Documents/projet_stage/data/analysis_pool_object/pool_metadata_object.tsv", sep="\t", row.names=F, col.names=T, quote=F)
 
 ##Add N/T orig ident
@@ -28,7 +27,6 @@ library(ggplot2)
 #metadata_pool_object <- metadata_pool_object[, c(1, 2, 3, 4, 5, 9, 6, 7, 8)]
 #write.table(metadata_pool_object, file="~/Documents/projet_stage/data/analysis_pool_object/pool_metadata_object.tsv", sep="\t", row.names=F, col.names=T, quote=F)
 
-##
 # head(metadata_pool_object)
 # str(metadata_pool_object) 
 # summary(metadata_pool)
@@ -43,11 +41,23 @@ library(ggplot2)
 
 #Analysis
 ##Myannotations
-myannotations_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$my_annotations)
-myannotations_barplot <- barplot(myannotations_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, levels=c(3, 4, 1, 5, 6, 7, 9, 2, 10))
+###All cells
+myannotations_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast", "Stellate cell", "Macrophage", "T cell", "B cell")))
+myannotations_table 
+myannotations_barplot <- barplot(myannotations_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
 text(myannotations_barplot, myannotations_table, paste(myannotations_table), cex=0.8, pos=3, col="gray45")
-legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F, inset=c(0.02, 0.02))
 
+#myannotations_barplot <- barplot(myannotations_table, col=c("lavender", "lightblue"), width=.3, beside=FALSE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+
+### Ductal cells
+myannotations_table_ductal_cells <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2")))
+myannotations_table_ductal_cells 
+myannotations_barplot_ductal_cells <- barplot(myannotations_table_ductal_cells, col=c("lavender", "lightblue"), beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+text(myannotations_barplot_ductal_cells, myannotations_table_ductal_cells, paste(myannotations_table_ductal_cells), cex=0.8, pos=3, col="gray45")
+legend("top", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+###Prop_table
 myannotations_proptable <- prop.table(myannotations_table)
 myannotations_proptable
 myannotations_proptable <- round(myannotations_proptable, 3)
@@ -55,12 +65,23 @@ myannotations_propbarplot <- barplot(myannotations_proptable, col=c("lavender", 
 text(myannotations_propbarplot,myannotations_proptable, paste(myannotations_proptable), cex=0.8, pos=3, col="gray45")
 legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
-#Pengall annotations
-pengall_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$peng_all_annotations)
+##Pengall annotations
+###All cells
+pengall_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_all_annotations, levels=c("Ductal cell type 1", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
+pengall_table
 pengall_barplot <- barplot(pengall_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
 text(pengall_barplot,pengall_table, paste(pengall_table), cex=0.8, pos=3, col="gray45")
 legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
+###Ductal cells
+pengall_table_ductal_cells <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_all_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2"))) 
+pengall_table_ductal_cells 
+pengall_barplot_ductal_cells <- barplot(pengall_table_ductal_cells, col=c("lavender", "lightblue"), beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+text(pengall_barplot_ductal_cells, pengall_table_ductal_cells, paste(pengall_table_ductal_cells), cex=0.8, pos=3, col="gray45")
+legend("top", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+
+###Prop_table
 pengall_proptable <- prop.table(pengall_table)
 pengall_proptable
 pengall_proptable <- round(pengall_proptable, 3)
