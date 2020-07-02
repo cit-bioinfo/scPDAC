@@ -279,14 +279,15 @@ head(top100.markers)
 
 #### **Assigning cell type identity to clusters**
 ```{r}
-experiment.merged <- RenameIdents(object = pool.init, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='19', '28'='19')
+Idents(pool) <- "seurat_clusters"
+experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='19', '28'='19')
 
 DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
 #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
 
-new.cluster.ids <- c("Stellate cell", "Ductall cell 1", "Ductall cell 2", "Macrophage", "Endothelial cell", "Acinar cell", "Fibroblast", "T cell", "B cell", "Endocrine cell")
+new.cluster.ids <- c("Stellate cell", "Ductal cell 1", "Ductal cell 2", "Macrophage", "Endothelial cell", "Acinar cell", "Fibroblast", "T cell", "B cell", "Endocrine cell")
 names(new.cluster.ids) <- levels(experiment.merged)
-pool.init <- RenameIdents(experiment.merged, new.cluster.ids)
+pool <- RenameIdents(experiment.merged, new.cluster.ids)
 
 DimPlot(pool.init, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 #DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
@@ -334,16 +335,21 @@ write_xlsx(clu_ann_sccatch, "/home/rose/Documents/projet_stage/data/scCATCH/clu_
 #load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
 
 ## Create SingleCellExperiment object by counts matrix
-counts2 <- data.matrix(counts, rownames.force = NA) #matrix
-metadata2 <- data.matrix(metadata, rownames.force = NA) #cell_type 
-sce <- SingleCellExperiment(list(counts=counts2), colData=DataFrame(metadata2))
+counts <- data.matrix(counts, rownames.force = NA) #matrix
+metadata2 <- data.matrix(metadata, rownames.force = NA) #cluter (0 to 34)
+sce <- SingleCellExperiment(list(counts=counts), colData=DataFrame(metadata2))
 print(sce)
 
+#Create SingleCellExperiment objet usinng pool seurat object 
+pool.sce <- as.SingleCellExperiment(pool)
+pool.sce@colData
+head(pool.sce$seurat_clusters)
+
 #Find all markers for pool2
-Idents(pool2) <- "cluster"
-pool2_markers <- FindAllMarkers(pool2, only.pos = TRUE) 
+Idents(pool) <- "seurat_clusters"
+pool_markers <- FindAllMarkers(pool, only.pos = TRUE) 
 #write_xlsx(pool2_markers, "~/Documents/projet_stage/data/pool2_markers.xlsx")
-load("/home/rose/Documents/projet_stage/data/pool2_markers.RData")
+load("/home/rose/Documents/projet_stage/data/cellasign/pool2_markers.RData")
 
 pool2_markers <- pool2_markers[6:7]
 
@@ -390,11 +396,12 @@ fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=
 plot5 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="orig.ident")
 plot5
 
-experiment.merged2 <- RenameIdents(object = pool2, 'N11'='N1', 'N10'='N1', 'N9'='N1', 'N8'='N1', 'N7'='N1', 'N6'='N1', 'N5'='N1', 'N4'='N1', 'N3'='N1', 'N2'='N1', 'T2'='T1', 'T3'='T1','T4'='T1','T5'='T1','T6'='T1','T7'='T1','T8'='T1','T9'='T1','T10'='T1','T11'='T1','T12'='T1','T13'='T1','T14'='T1','T15'='T1','T16'='T1','T17'='T1','T18'='T1','T19'='T1','T20'='T1','T21'='T1','T22'='T1','T23'='T1','T24'='T1')
+#Idents(pool) <- "orig.ident"
+experiment.merged2 <- RenameIdents(object = pool, 'N11'='N1', 'N10'='N1', 'N9'='N1', 'N8'='N1', 'N7'='N1', 'N6'='N1', 'N5'='N1', 'N4'='N1', 'N3'='N1', 'N2'='N1', 'T2'='T1', 'T3'='T1','T4'='T1','T5'='T1','T6'='T1','T7'='T1','T8'='T1','T9'='T1','T10'='T1','T11'='T1','T12'='T1','T13'='T1','T14'='T1','T15'='T1','T16'='T1','T17'='T1','T18'='T1','T19'='T1','T20'='T1','T21'='T1','T22'='T1','T23'='T1','T24'='T1')
 #plot6 <-DimPlot(object = experiment.merged2, pt.size=0.5, label = T, reduction = "umap")
 new.orig_ident.ids <- c("Control samples", "Cancer samples")
 names(new.orig_ident.ids) <- levels(experiment.merged2)
-pool2 <- RenameIdents(experiment.merged2, new.orig_ident.ids)
+pool<- RenameIdents(experiment.merged2, new.orig_ident.ids)
 
 plot6 <- DimPlot(pool2, reduction = "umap", pt.size = 0.5, cols=c("lightblue", "lavender"))
 plot6 
@@ -454,7 +461,7 @@ table <- data.frame(metadata, orig.ident, clusters)
 ##### Loading files
 ```{r}
 #counts matrix
-load("~/Documents/projet_stage/data/Peng_Data.RData")
+load("~/Documents/projet_stage/data/data/Peng_Data.RData")
 #write.table(counts, file="~/Documents/projet_stage/data/inferCNV/counts.txt") 
 
 #annotations file 
@@ -509,6 +516,11 @@ infercnv_objt = infercnv::run(infercnv_objt,
                              HMM=TRUE,
                              noise_filter = 0.2)
 #session aborted at step 2 : filtering genes 
+
+#cf résultats 
+load("~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCounts.RData")
+write.table(inferCNVNormExp, file="~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCounts.xlsx", sep="\t")
+
 ```
 
 ### **Analysis**
@@ -517,9 +529,9 @@ infercnv_objt = infercnv::run(infercnv_objt,
 #Extract data from seurat object
 #head(pool@meta.data, 10)
 
-write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis/metadata_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object_orig_ident.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 
-write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis/active_ident_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis_pool_object/active_ident_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 ```
 
 
