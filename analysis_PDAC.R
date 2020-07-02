@@ -1,4 +1,4 @@
-#Loading dataset 
+#Loading dataset----------- 
 load("~/Documents/projet_stage/data/data/pool_object.RData")
 load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RData")
 
@@ -39,8 +39,10 @@ load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RD
 # metadata_pool_object$peng_all_annotations <- as.factor(metadata_pool_object$peng_all_annotations)
 # str(metadata_pool_object)
 
-#Analysis
-##Myannotations
+
+#Analysis-----------
+
+##Myannotations-----------
 ###All cells
 myannotations_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast", "Stellate cell", "Macrophage", "T cell", "B cell")))
 myannotations_table 
@@ -65,7 +67,7 @@ myannotations_propbarplot <- barplot(myannotations_proptable, col=c("lavender", 
 text(myannotations_propbarplot,myannotations_proptable, paste(myannotations_proptable), cex=0.8, pos=3, col="gray45")
 legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
-##Pengall annotations
+##Pengall annotations-----------
 ###All cells
 pengall_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_all_annotations, levels=c("Ductal cell type 1", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
 pengall_table
@@ -80,7 +82,6 @@ pengall_barplot_ductal_cells <- barplot(pengall_table_ductal_cells, col=c("laven
 text(pengall_barplot_ductal_cells, pengall_table_ductal_cells, paste(pengall_table_ductal_cells), cex=0.8, pos=3, col="gray45")
 legend("top", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
-
 ###Prop_table
 pengall_proptable <- prop.table(pengall_table)
 pengall_proptable
@@ -89,3 +90,18 @@ pengall_propbarplot <- barplot(pengall_proptable, col=c("lavender", "lightblue")
 text(pengall_propbarplot,pengall_proptable, paste(pengall_proptable), cex=0.8, pos=3, col="gray45")
 legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
+##Clusters-----------
+cluster_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$seurat_clusters, levels=c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34")))
+cluster_table
+cluster_barplot <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 5000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+text(cluster_barplot, cluster_table, paste(cluster_table), cex=0.8, pos=3, col="gray45")
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F, inset=c(0.02, 0.02))
+
+test_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
+test_table
+
+test2_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$peng_all_annotations)
+test2_table
+
+test3_table <- table(metadata_pool_object$my_annotations, metadata_pool_object$peng_all_annotations)
+test3_table
