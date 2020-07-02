@@ -1,6 +1,7 @@
 #Loading dataset 
 load("~/Documents/projet_stage/data/data/pool_object.RData")
 load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RData")
+library(ggplot2)
 
 #Data treatment 
 #Add metadata
@@ -40,4 +41,30 @@ load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RD
 # metadata_pool_object$peng_all_annotations <- as.factor(metadata_pool_object$peng_all_annotations)
 # str(metadata_pool_object)
 
+#Analysis
+##Myannotations
+myannotations_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$my_annotations)
+myannotations_barplot <- barplot(myannotations_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, levels=c(3, 4, 1, 5, 6, 7, 9, 2, 10))
+text(myannotations_barplot, myannotations_table, paste(myannotations_table), cex=0.8, pos=3, col="gray45")
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
+
+myannotations_proptable <- prop.table(myannotations_table)
+myannotations_proptable
+myannotations_proptable <- round(myannotations_proptable, 3)
+myannotations_propbarplot <- barplot(myannotations_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 0.25), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8) 
+text(myannotations_propbarplot,myannotations_proptable, paste(myannotations_proptable), cex=0.8, pos=3, col="gray45")
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
+
+#Pengall annotations
+pengall_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$peng_all_annotations)
+pengall_barplot <- barplot(pengall_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+text(pengall_barplot,pengall_table, paste(pengall_table), cex=0.8, pos=3, col="gray45")
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
+
+pengall_proptable <- prop.table(pengall_table)
+pengall_proptable
+pengall_proptable <- round(pengall_proptable, 3)
+pengall_propbarplot <- barplot(pengall_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 0.25), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+text(pengall_propbarplot,pengall_proptable, paste(pengall_proptable), cex=0.8, pos=3, col="gray45")
+legend("topright", legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
