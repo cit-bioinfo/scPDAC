@@ -6,9 +6,9 @@ output: html_document
 
 # **Stage M1 - Analyse de l’hétérogénéité tumorale du cancer du pancréas par des approches single-cell**
 
-```{r setup, include=FALSE} 
-knitr::opts_chunk$set(echo=TRUE)
-```
+#```{r setup, include=FALSE} 
+#knitr::opts_chunk$set(echo=TRUE)
+#```
 
 ## **Loading packages**
 ```{r loading_packages, include=FALSE}
@@ -335,60 +335,86 @@ write_xlsx(clu_ann_sccatch, "/home/rose/Documents/projet_stage/data/scCATCH/clu_
 #load("/home/rose/Documents/projet_stage/data/sizefactors.RData")
 
 ## Create SingleCellExperiment object by counts matrix
-counts <- data.matrix(counts, rownames.force = NA) #matrix
-metadata2 <- data.matrix(metadata, rownames.force = NA) #cluter (0 to 34)
-sce <- SingleCellExperiment(list(counts=counts), colData=DataFrame(metadata2))
-print(sce)
+#counts <- data.matrix(counts, rownames.force = NA) #matrix
+#metadata2 <- data.matrix(metadata, rownames.force = NA) #cluter (0 to 34)
+#sce <- SingleCellExperiment(list(counts=counts), colData=DataFrame(metadata2))
+#print(sce)
 
-#Create SingleCellExperiment objet usinng pool seurat object 
+#Create SingleCellExperiment objet using pool seurat object
 pool.sce <- as.SingleCellExperiment(pool)
+pool.sce <- pool.sce[,75:100]
 pool.sce@colData
 head(pool.sce$seurat_clusters)
+dim(pool.sce)
 
-#Find all markers for pool2
+#Find all markers for pool
 Idents(pool) <- "seurat_clusters"
-pool_markers <- FindAllMarkers(pool, only.pos = TRUE) 
-#write_xlsx(pool2_markers, "~/Documents/projet_stage/data/pool2_markers.xlsx")
-load("/home/rose/Documents/projet_stage/data/cellasign/pool2_markers.RData")
+head(pool@metadata)
+pool_markers_test <- FindAllMarkers(pool, only.pos = TRUE) 
+#write_xlsx(pool_markers_test, "~/Documents/projet_stage/data/cellasign/pool_markers_test.xlsx")
+load("/home/rose/Documents/projet_stage/data/cellasign/pool_markers_test.RData")
 
-pool2_markers <- pool2_markers[6:7]
+pool_markers_test_avg <- subset(pool_markers_test, avg_logFC >=1)
+head(pool_markers)
+pool_markers_test_avg <- pool_markers_test_avg[6:7]
 
 #Creation of the list, where each entry is named by a cell type and contains a character vector of gene names belonging to that cell type
-split_pool2_markers <- split(pool2_markers[2], pool2_markers[[1]])
-str(head(split_pool2_markers))
+split_pool_markers <- split(pool_markers_test_avg[2], pool_markers_test_avg[[1]])
+str(head(split_pool_markers))
 
-unlist_pool2_markers <- unlist(split_pool2_markers)
-unlist_pool2_markers <- unlist(split_pool2_markers, use.names=FALSE)
-head(unlist_pool2_markers)
+unlist_pool_markers <- unlist(split_pool_markers)
+unlist_pool_markers <- unlist(split_pool_markers, use.names=FALSE)
+head(unlist_pool_markers)
 
-list_pool2_markers <- lapply(split_pool2_markers, function(x) unlist(x, use.names=FALSE))
-str(head(list_pool2_markers))  
+list_pool_markers <- lapply(split_pool_markers, function(x) unlist(x, use.names=FALSE))
+str(head(list_pool_markers))  
 
 #Creation of the marker gene matrix
-mat_pool2_markers <- marker_list_to_mat(list_pool2_markers, include_other = FALSE)
-mat_pool2_markers[1:10,]
+mat_pool_markers <- marker_list_to_mat(list_pool_markers, include_other = FALSE)
+mat_pool_markers[1:10,]
 
-#frame_mat_pool2_markers <- as.data.frame(mat_pool2_markers)
-#write_xlsx(frame_mat_pool2_markers, "~/Documents/projet_stage/data/mat_pool2_markers.xlsx")
+frame_mat_pool_markers <- as.data.frame(mat_pool_markers)
+write_xlsx(frame_mat_pool_markers, "~/Documents/projet_stage/data/cellasign/mat_pool_markers.xlsx")
 ```
 
 ###### cellasign tool
 ```{r}
 #Size factor for each cell 
 library(scran)
-sce <- computeSumFactors(sce)
-head(sizeFactors(sce))
-s <- sizeFactors(sce)
+pool.sce <- computeSumFactors(pool.sce)
+head(sizeFactors(pool.sce))
+s <- sizeFactors(pool.sce)
 s
 
-dim(mat_pool2_markers)
+load("~/Documents/projet_stage/data/cellasign/cellasign.RData")
 
-fit <- cellassign(exprs_obj=sce[rownames(mat_pool2_markers),], marker_gene_info=mat_pool2_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
-#return cellasign object
-#error, session avorted
+fit <- cellassign(exprs_obj=pool.sce[rownames(mat_pool_markers),], marker_gene_info=mat_pool_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
+fit_75_100 <- fit 
+
+print(celltypes(fit))
+pheatmap::pheatmap(cellprobs(fit_25_75), legend=TRUE)
+print(table(pool.sce$seurat_clusters, celltypes(fit_75_100)))
 
 #metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
 ```
+
+##example cellasign
+```{r}
+data(example_sce)
+data(example_marker_mat)
+s <- sizeFactors(example_sce)
+
+fit <- cellassign(exprs_obj = example_sce[rownames(example_marker_mat),], 
+                  marker_gene_info = example_marker_mat, 
+                  s = s, 
+                  learning_rate = 1e-2, 
+                  shrinkage = TRUE,
+                  verbose = FALSE)
+pheatmap::pheatmap(cellprobs(fit))                
+```
+
+
+
 
 
 ### **Using cell labels - pool2**
