@@ -105,21 +105,23 @@ legend("topright", inset=c(-0.1, -0.2), legend= c("Control samples", "Cancer sam
 ##Clusters-----------
 cluster_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$seurat_clusters, levels=c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34")))
 cluster_table
-cluster_barplot <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 5000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+cluster_barplot <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 5000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_N/T", col.main="gray45")
 text(cluster_barplot, cluster_table, paste(cluster_table), cex=0.8, pos=3, col="gray45")
-legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
+legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
-cluster_table
-cluster_barplot_2 <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=FALSE, ylim=c(0, 5000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
-legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
+# cluster_table
+# cluster_barplot_2 <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=FALSE, ylim=c(0, 5000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
+# legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
 
+# test_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
+# test_table
+# test_barplot <- barplot(test_table, width=.3, ylim=c(0, 15000), col=rainbow(34), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_celltype", col.main="gray45")
+# legend("topright", inset=c(0.05,-0.2), legend= c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"), col =rainbow(34), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.35, horiz=T)
 
-test_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
-test_table
+# test2_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$peng_all_annotations)
+# test2_table
+# barplot(test2_table)
 
-test2_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$peng_all_annotations)
-test2_table
-
-test3_table <- table(metadata_pool_object$my_annotations, metadata_pool_object$peng_all_annotations)
-test3_table
-
+# test3_table <- table(metadata_pool_object$my_annotations, metadata_pool_object$peng_all_annotations)
+# test3_table
+# barplot(test3_table)
