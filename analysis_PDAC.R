@@ -61,23 +61,23 @@ legend("topright", inset=c(-0.1, -0.2), legend= c("Control samples", "Cancer sam
 
 ### Ductal cells
 myannotations_table_ductal_cells <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2")))
-myannotations_table_ductal_cells 
+myannotations_table_ductal_cells
 myannotations_barplot_ductal_cells <- barplot(myannotations_table_ductal_cells, col=c("lavender", "lightblue"), beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations", col.main="gray45")
 text(myannotations_barplot_ductal_cells, myannotations_table_ductal_cells, paste(myannotations_table_ductal_cells), cex=0.8, pos=3, col="gray45")
 legend("top",  inset=c(-0.2, -0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
 
 ###Prop_table
-myannotations_proptable <- prop.table(myannotations_table)
-myannotations_proptable
+myannotations_proptable <- prop.table((myannotations_table))*100
+myannotations_proptable  
 myannotations_proptable <- round(myannotations_proptable, 3)
-myannotations_propbarplot <- barplot(myannotations_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 0.25), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations", col.main="gray45") 
+myannotations_propbarplot <- barplot(myannotations_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 25), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations", col.main="gray45") 
 text(myannotations_propbarplot,myannotations_proptable, paste(myannotations_proptable), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.1, -0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
 ##Peng_al annotations-----------
 ###All cells
-pengal_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_al_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
-pengal_table
+pengal_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_all_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
+pengal_table 
 pengal_barplot <- barplot(pengal_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
 text(pengal_barplot,pengal_table, paste(pengal_table), cex=0.8, pos=3, col="gray45")
 par(xpd=TRUE)
@@ -95,10 +95,10 @@ text(pengal_barplot_ductal_cells, pengal_table_ductal_cells, paste(pengal_table_
 legend("top",  inset=c(-0.2, -0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
 
 ###Prop_table
-pengal_proptable <- prop.table(pengal_table)
+pengal_proptable <- prop.table(pengal_table)*100
 pengal_proptable
 pengal_proptable <- round(pengal_proptable, 3)
-pengal_propbarplot <- barplot(pengal_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 0.25), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
+pengal_propbarplot <- barplot(pengal_proptable, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 20), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
 text(pengal_propbarplot,pengal_proptable, paste(pengal_proptable), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.1, -0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", box.lty=0, bty="n", pch=20, pt.cex=2, cex=0.9)
 
@@ -113,15 +113,31 @@ legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samp
 # cluster_barplot_2 <- barplot(cluster_table, col=c("lavender", "lightblue"), width=.3, beside=FALSE, ylim=c(0, 5000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8)
 # legend("topright", inset=c(-0.1,-0.2), legend= c("Control samples", "Cancer samples"), col =c("lavender", "lightblue"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=T)
 
-# test_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
-# test_table
-# test_barplot <- barplot(test_table, width=.3, ylim=c(0, 15000), col=rainbow(34), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_celltype", col.main="gray45")
-# legend("topright", inset=c(0.05,-0.2), legend= c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"), col =rainbow(34), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.35, horiz=T)
+test_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
+test_table
+col = rainbow(34)
+test_barplot <- barplot(test_table, width=.3, ylim=c(0, 15000), col=col, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_celltype", col.main="gray45")
+legend("topright", inset=c(0.03,-0.2), legend= c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"), col =col, text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.5, horiz=F, ncol=7)
+test_table <-as.data.frame(test_table)
 
-# test2_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$peng_all_annotations)
-# test2_table
-# barplot(test2_table)
+test2_table <- table(metadata_pool_object$seurat_clusters, metadata_pool_object$peng_al_annotations)
+test2_table
+col = rainbow(34)
+test2_barplot <- barplot(test2_table, width=.3, ylim=c(0, 15000), col=col, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_celltype", col.main="gray45")
+legend("topright", inset=c(0.03,-0.2), legend= c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"), col =col, text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.5, horiz=F, ncol=7)
+test2_table <- as.data.frame(test2_table)
 
-# test3_table <- table(metadata_pool_object$my_annotations, metadata_pool_object$peng_all_annotations)
-# test3_table
+test3_table <- table(metadata_pool_object$my_annotations, metadata_pool_object$peng_al_annotations)
+test3_table
 # barplot(test3_table)
+
+test3_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$seurat_clusters, metadata_pool_object$my_annotations)
+test3_table
+test3_table <- as.data.frame(test3_table)
+test3_table <- test3_table[-test3_table$Freq!=0,]
+test3_table
+
+test4_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$seurat_clusters, metadata_pool_object$peng_al_annotations)
+test4_table
+test4_table <- test4_table[-test4_table$Freq!=0,]
+test4_table
