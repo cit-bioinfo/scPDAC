@@ -342,7 +342,7 @@ write_xlsx(clu_ann_sccatch, "/home/rose/Documents/projet_stage/data/scCATCH/clu_
 
 #Create SingleCellExperiment objet using pool seurat object
 pool.sce <- as.SingleCellExperiment(pool)
-pool.sce <- pool.sce[,75:100]
+pool.sce <- pool.sce[,1:50]
 pool.sce@colData
 head(pool.sce$seurat_clusters)
 dim(pool.sce)
@@ -389,13 +389,17 @@ s
 load("~/Documents/projet_stage/data/cellasign/cellasign.RData")
 
 fit <- cellassign(exprs_obj=pool.sce[rownames(mat_pool_markers),], marker_gene_info=mat_pool_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
-fit_75_100 <- fit 
+fit_1_50 <- fit 
 
-print(celltypes(fit))
-pheatmap::pheatmap(cellprobs(fit_25_75), legend=TRUE)
-print(table(pool.sce$seurat_clusters, celltypes(fit_75_100)))
+print(fit_1_50)
+print(celltypes(fit_1_50))
+heatmap_1_50 <- pheatmap::pheatmap(cellprobs(fit_1_50), legend=TRUE, main="fit_1_50")
+heatmap_25_75 <- pheatmap::pheatmap(cellprobs(fit_25_75), legend=TRUE, main="fit_25_75")
+heatmap_50_100 <- pheatmap::pheatmap(cellprobs(fit_50_100), legend=TRUE, main="fit_50_100")
 
-#metadata <- fread("~/Documents/projet_stage/data/all_celltype.txt")
+table_1_50 <- table(pool.sce$seurat_clusters, celltypes(fit_1_50))
+table_25_75 <- table(pool.sce$seurat_clusters, celltypes(fit_25_75))
+table_50_100 <- table(pool.sce$seurat_clusters, celltypes(fit_50_100))
 ```
 
 ##example cellasign
@@ -410,10 +414,9 @@ fit <- cellassign(exprs_obj = example_sce[rownames(example_marker_mat),],
                   learning_rate = 1e-2, 
                   shrinkage = TRUE,
                   verbose = FALSE)
+
 pheatmap::pheatmap(cellprobs(fit))                
 ```
-
-
 
 
 
@@ -471,12 +474,12 @@ DoHeatmap(cluster.averages, features = unlist(TopFeatures(pool2[["pca"]], balanc
 
 ```{r}
 ##Contengency table
-orig.ident <- pool2$orig.ident
-clusters <- pool.init$seurat_clusters
+#orig.ident <- pool2$orig.ident
+#clusters <- pool.init$seurat_clusters
 
-contengency.table <- data.frame(orig.ident, clusters)
+#contengency.table <- data.frame(orig.ident, clusters)
 
-table <- data.frame(metadata, orig.ident, clusters)
+#table <- data.frame(metadata, orig.ident, clusters)
 
 #write_xlsx(contengency.table, "~/Université/BIOLOGIE/Master Bioinformatique/M1 Bioinformatique/Semestre 2/Stage M1/Projet/data/supplementary_information/contengency_table.xlsx")
 
@@ -545,9 +548,12 @@ infercnv_objt = infercnv::run(infercnv_objt,
 
 #cf résultats 
 load("~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCounts.RData")
-write.table(inferCNVNormExp, file="~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCounts.xlsx", sep="\t")
-
+#write.table(inferCNVNormExp, file="~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCounts.xlsx", sep="\t")
 ```
+
+
+
+
 
 ### **Analysis**
 #### POOL 
