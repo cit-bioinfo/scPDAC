@@ -1,7 +1,9 @@
 #Loading dataset----------- 
 load("~/Documents/projet_stage/data/data/pool_object.RData")
 load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object.RData")
+load("~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_subset.RData")
 load("~/Documents/projet_stage/data/analysis_pool_object/barplot_data.RData")
+
 
 library(plotrix)
 #Data treatment 
@@ -42,6 +44,13 @@ library(plotrix)
 # str(metadata_pool_object)
 
 #names(metadata_pool_object)[match("peng_all_annotations", names(metadata_pool_object))] <- "peng_al_annotations"
+
+#Subset metadata_infer_CNV
+metadata_pool_subset <- merge(infer_CNV_T_colMeans, metadata_pool_object, by="cell")
+metadata_pool_subset <- metadata_pool_subset[, c(1, 4, 5, 6, 7, 8, 9, 10, 11, 2, 3 )]
+summary(metadata_pool_subset)
+metadata_pool_subset$CNA <- as.factor(metadata_pool_subset$CNA)
+
 #Analysis-----------
 
 ##Myannotations-----------
@@ -76,7 +85,7 @@ legend("topright", inset=c(-0.1, -0.2), legend= c("Control samples", "Cancer sam
 
 ##Peng_al annotations-----------
 ###All cells
-pengal_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_all_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
+pengal_table <- table(metadata_pool_object$orig_ident_N_T, factor(metadata_pool_object$peng_al_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
 pengal_table 
 pengal_barplot <- barplot(pengal_table, col=c("lavender", "lightblue"), width=.3, beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
 text(pengal_barplot,pengal_table, paste(pengal_table), cex=0.8, pos=3, col="gray45")
@@ -141,3 +150,11 @@ test4_table <- table(metadata_pool_object$orig_ident_N_T, metadata_pool_object$s
 test4_table
 test4_table <- test4_table[-test4_table$Freq!=0,]
 test4_table
+
+##inferCNV / CNA-----------
+
+
+
+
+
+
