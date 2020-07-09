@@ -561,7 +561,7 @@ load("~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCoun
 ```{r}
 library(dplyr)
 library(matrixStats)
-#Treatment of the normal and tumor samples from inferCNV 
+#Data treatment of normal and tumor samples from inferCNV matix 
 
 inferCNVNormExp <- as.data.frame(inferCNVNormExp)
 
@@ -588,10 +588,22 @@ infer_CNV_T <- as.matrix(infer_CNV_T)
 infer_CNV_T_colMeans <- colMeans(infer_CNV_T)
 #infer_CNV_T_colMeans <- as.data.frame(infer_CNV_T_colMeans)
 
-sum(infer_CNV_T_colMeans >=quantile_N)
+infer_CNV_T_colMeans$CNA <- infer_CNV_T_colMeans$infer_CNV_T
+
+infer_CNV_T_colMeans$CNA[infer_CNV_T_colMeans$CNA > quantile_N] <- "CNA+"
+sum(infer_CNV_T_colMeans$CNA == "CNA+")
 #4161 : CNA +
-sum(infer_CNV_T_colMeans < quantile_N)
+infer_CNV_T_colMeans$CNA[infer_CNV_T_colMeans$CNA <= quantile_N] <- "CNA-"
+infer_CNV_T_colMeans[3566, 2] <- "CNA-"
+sum(infer_CNV_T_colMeans$CNA == "CNA-")
 #9041 : CNA -
+
+infer_CNV_T_colMeans <- cbind("cell" = rownames(infer_CNV_T_colMeans), infer_CNV_T_colMeans)
+rownames(infer_CNV_T_colMeans) <- 1:nrow(infer_CNV_T_colMeans)
+
+write.table(infer_CNV_T_colMeans, file="~/Documents/projet_stage/data/inferCNV/infer_CNV_T_colMeans.txt", quote=FALSE, sep="\t", row.names=F)
+
+load("~/Documents/projet_stage/data/inferCNV/infer_cnv_analysis.RData")
 ```
 
 ### **Analysis**
