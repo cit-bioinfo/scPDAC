@@ -245,12 +245,12 @@ head(pool_markers)
 #### Visualization 
 ```{r}
 #For a specific marker
-feature <- c("MET")
+feature <- c("KRT19")
 ```
 
 ##### Violin plot
 ```{r}
-VlnPlot(pool, features = feature, pt.size= FALSE, group.by="cluster")
+VlnPlot(pool, features = feature, pt.size= FALSE, group.by="seurat_clusters")
 ```
 
 ##### Feature plot
