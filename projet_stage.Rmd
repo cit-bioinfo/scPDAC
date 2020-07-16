@@ -342,19 +342,19 @@ write_xlsx(clu_ann_sccatch, "/home/rose/Documents/projet_stage/data/scCATCH/clu_
 
 #Create SingleCellExperiment objet using pool seurat object
 pool.sce <- as.SingleCellExperiment(pool)
-pool.sce <- pool.sce[,1:50]
+pool.sce <- pool.sce[,1:100]
 pool.sce@colData
-head(pool.sce$seurat_clusters)
+head(pool.sce$peng_all_annotations)
 dim(pool.sce)
 
 #Find all markers for pool
-Idents(pool) <- "seurat_clusters"
-head(pool@metadata)
+Idents(pool) <- "peng_all_annotations"
 pool_markers_test <- FindAllMarkers(pool, only.pos = TRUE) 
 #write_xlsx(pool_markers_test, "~/Documents/projet_stage/data/cellasign/pool_markers_test.xlsx")
 load("/home/rose/Documents/projet_stage/data/cellasign/pool_markers_test.RData")
 
-pool_markers_test_avg <- subset(pool_markers_test, avg_logFC >=1)
+boxplot(avg_logFC ~ cluster, pool_markers_test)
+pool_markers_test_avg <- subset(pool_markers_test, avg_logFC >=1.5)
 head(pool_markers)
 pool_markers_test_avg <- pool_markers_test_avg[6:7]
 
@@ -391,6 +391,7 @@ load("~/Documents/projet_stage/data/cellasign/cellasign.RData")
 
 fit <- cellassign(exprs_obj=pool.sce[rownames(mat_pool_markers),], marker_gene_info=mat_pool_markers, s=s, learning_rate = 1e-2, shrinkage=TRUE, verbose=FALSE) 
 
+fit_1_50 <- fit
 print(fit_1_50)
 print(celltypes(fit_1_50))
 heatmap_1_50 <- pheatmap::pheatmap(cellprobs(fit_1_50), legend=TRUE, main="fit_1_50")
