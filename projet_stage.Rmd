@@ -397,16 +397,6 @@ print(celltypes(fit_1_50))
 heatmap_1_50 <- pheatmap::pheatmap(cellprobs(fit_1_50), legend=TRUE, main="fit_1_50")
 heatmap_25_75 <- pheatmap::pheatmap(cellprobs(fit_25_75), legend=TRUE, main="fit_25_75")
 heatmap_50_100 <- pheatmap::pheatmap(cellprobs(fit_50_100), legend=TRUE, main="fit_50_100")
-
-table_1_50 <- table(pool.sce$seurat_clusters, celltypes(fit_1_50))
-table_1_50
-table_25_75 <- table(pool.sce$seurat_clusters, celltypes(fit_25_75))
-table_25_75
-table_50_100 <- table(pool.sce$seurat_clusters, celltypes(fit_50_100))
-table_50_100
-
-print(table(pool.sce$seurat_clusters, celltypes(fit_1_50)))
-
 ```
 
 ##example cellasign
@@ -562,7 +552,7 @@ load("~/Documents/projet_stage/data/inferCNV/results_remy/InferCNVNormalizedCoun
 ```{r}
 library(dplyr)
 library(matrixStats)
-#Data treatment of normal and tumor samples from inferCNV matix 
+#Data treatment of normal and tumor samples from inferCNV matrix 
 
 inferCNVNormExp <- as.data.frame(inferCNVNormExp)
 
@@ -578,7 +568,8 @@ infer_CNV_N_colMeans <- colMeans(infer_CNV_N)
 
 quantile_N <- quantile(infer_CNV_N_colMeans, probs=0.99)
 quantile_N 
-#0.0212167
+#0.0212167 
+
 
 #tumoral samples
 infer_CNV_T <- select(inferCNVNormExp, starts_with("T"))
@@ -605,6 +596,12 @@ rownames(infer_CNV_T_colMeans) <- 1:nrow(infer_CNV_T_colMeans)
 write.table(infer_CNV_T_colMeans, file="~/Documents/projet_stage/data/inferCNV/infer_CNV_T_colMeans.txt", quote=FALSE, sep="\t", row.names=F)
 
 load("~/Documents/projet_stage/data/inferCNV/infer_cnv_analysis.RData")
+
+#Courbe de densité
+plot(density(infer_CNV_N_colMeans$infer_CNV_N_colMeans), main="Average CNV", lwd=2, xlim=c(0, 0.04))
+lines(density(infer_CNV_T_colMeans$infer_CNV_T), col="red", lwd=2)
+abline(v=quantile_N, lty=2, lwd=2)
+legend(0.026, 80, legend=c("Control samples", "Cancer samples", "C99 = 0.0212"), col=c("black", "red", "black"), lty=c(1, 1, 2), cex=0.9, box.lty=0, bg="white")
 ```
 
 ### **Analysis**
