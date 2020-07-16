@@ -210,7 +210,7 @@ cluster_barplot_CNA <- barplot(cluster_table_CNA, col=c("springgreen3", "red3"),
 text(cluster_barplot_CNA, cluster_table_CNA, paste(cluster_table_CNA), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.02,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
-cluster_table_CNA_positiv <- cluster_table_CNA
+cluster_table_CNA_positiv <- cluster_table_CNA[, -15]
 cluster_barplot_CNA_positiv <- barplot(cluster_table_CNA_positiv, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 1500), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA_positiv", col.main="gray45")
 text(cluster_barplot_CNA_positiv, cluster_table_CNA_positiv, paste(cluster_table_CNA_positiv), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.02,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
@@ -245,4 +245,10 @@ cluster_ductal_cell_2_CNA_barplot_peng_al  <- barplot(cluster_ductal_cell_2_CNA_
 text(cluster_ductal_cell_2_CNA_barplot_peng_al , cluster_ductal_cell_2_CNA_table_peng_al , paste(cluster_ductal_cell_2_CNA_table_peng_al ), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.005,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
-
+#pourcentage de cellules tumorales ne faisant pas parties des cellules ductal 2 
+p <- prop.table(cluster_table_CNA_positiv)*100
+p <- p[, c(1, 4, 5, 6, 9, 11, 12, 15, 19, 23)]
+p <- prop.table(p)*100
+rowSums(p)
+#CNA+ : 1.0508
+#CNA- : 98.9492
