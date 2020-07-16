@@ -176,7 +176,7 @@ addmargins(myannotations_table_CNA)
 myannotations_proptable_CNA <- prop.table(myannotations_table_CNA, 2)*100
 myannotations_proptable_CNA <- round(myannotations_proptable_CNA, 3)
 myannotations_proptable_CNA
-myannotations_propbarplot_CNA <- barplot(myannotations_proptable_CNA, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 100), las=2, cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations_CNA", col.main="gray45") 
+myannotations_propbarplot_CNA <- barplot(myannotations_proptable_CNA, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 100), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations_CNA", col.main="gray45", horiz=F) 
 text(myannotations_propbarplot_CNA,myannotations_proptable_CNA, paste(myannotations_proptable_CNA), cex=0.8, pos=3, col="gray45")
 
 #pengal / CNA
@@ -209,6 +209,18 @@ cluster_table_CNA <- round(cluster_table_CNA, 3)
 cluster_barplot_CNA <- barplot(cluster_table_CNA, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 100), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA", col.main="gray45")
 text(cluster_barplot_CNA, cluster_table_CNA, paste(cluster_table_CNA), cex=0.8, pos=3, col="gray45")
 legend("topright", inset=c(-0.02,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+cluster_table_CNA_positiv <- cluster_table_CNA
+cluster_barplot_CNA_positiv <- barplot(cluster_table_CNA_positiv, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 1500), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA_positiv", col.main="gray45")
+text(cluster_barplot_CNA_positiv, cluster_table_CNA_positiv, paste(cluster_table_CNA_positiv), cex=0.8, pos=3, col="gray45")
+legend("topright", inset=c(-0.02,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+cluster_table_CNA_positiv <- prop.table(cluster_table_CNA_positiv, 2)*100
+cluster_table_CNA_positiv <- round(cluster_table_CNA_positiv, 3)
+cluster_barplot_CNA_positiv <- barplot(cluster_table_CNA_positiv, col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 120), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA", col.main="gray45")
+text(cluster_barplot_CNA_positiv, cluster_table_CNA_positiv, paste(cluster_table_CNA_positiv), cex=0.8, pos=3, col="gray45")
+legend("topright", inset=c(-0.02,-0.2), legend= c("CNA-", "CNA+"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
 
 #ductal cell 2 + CNA
 
