@@ -22,8 +22,16 @@ str(metadata_pool)
 load("/home/rose/Documents//projet_stage/data/data/pool_object.RData")
 load("/home/rose/Documents//projet_stage/data/analysis_pool_object/metadata_pool.RData")
 
+rownames(metadata_pool) <- metadata_pool$cell
+metadata_pool$cell <- NULL
+metadata_pool_CNA <- metadata_pool[, c(9, 10)]
+pool <- AddMetaData(pool, metadata=metadata_pool_CNA)
+pool
+
+#Creation of a new seurat object : subset of cells from specific clusters
+Idents(pool) <- "seurat_clusters"
+pool_subset <- subset(x=pool, idents=c("2", "9", "14", "18", "20", "24", "25"))
+pool_subset
+#11467 cells 
 
 
-
-
-pool <- AddMetaData(pool, metadata = metadata_pool, col.name="" )
