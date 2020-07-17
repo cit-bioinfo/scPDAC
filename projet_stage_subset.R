@@ -1,4 +1,4 @@
-#Subset of epithelial cells.
+#Subset of epithelial cells ----
 #It concerns cells of clusters highly rich in tumor cells : n°2, 9, 14, 18, 20, 24, 25. 
 
 #Add metadata to Seurat object : CNA column
@@ -34,4 +34,55 @@ pool_subset <- subset(x=pool, idents=c("2", "9", "14", "18", "20", "24", "25"))
 pool_subset
 #11467 cells 
 
+#COMPARER OBJECT DE DÉPART POUR VOIR LES METADATA : que nCount et nFeature et orig.ident
+pool_subset[["percent.mt"]] <- NULL 
+
+#Seurat Pipeline ----
+
+## **Standard pre-processing workflow - Data filtering**
+### Calculate the percentage of mitochondrial genes 
+pool_subset[["percent.mt"]] <- PercentageFeatureSet(object = pool_subset, pattern = "^MT-")
+head(pool_subset@meta.data, 5)
+
+## **Normalizing data - logNormalize**
+### Normalizing the data
+pool_subset <- NormalizeData(pool_subset)
+#pool_subset[["RNA"]]@data
+
+### Identification of highly variable features
+pool_subset <- FindVariableFeatures(object=pool_subset, selection.method = "vst", nfeatures = 2000)
+top10_variablefeatures_subset <- head(VariableFeatures(pool_subset), 10)
+top10_variablefeatures_subset
+
+## **Scaling data**
+pool_subset <- ScaleData(pool_subset)
+
+## **PCA**
+pool_subset <- RunPCA(pool_subset, features = VariableFeatures(object = pool_subset))
+DimHeatmap(pool_subset, dims=10:20, cells=500, balanced=TRUE)
+
+pool_subset <- JackStraw(pool_subset, num.replicate = 100)
+pool_subset <- ScoreJackStraw(pool_subset, dims=1:20)
+JackStrawPlot(pool_subset, dims=1:20)
+#0 : p-value is smaller than can be represented in R
+ElbowPlot(pool_subset, ndims = 50, reduction = "pca")
+
+## **Cluster the cell**
+pool_subset <- FindNeighbors(pool_subset, reduction='pca', dims = 1:25)
+pool_subset <- FindClusters(pool_subset, resolution = 0.8) 
+head(pool_subset@meta.data, 5)
+
+library(ggraph)
+library(ggplot2)
+library(clustree)
+par(mar=c(5, 5, 5, 5))
+clustree(pool_subset, prefixe="RNA_snn_res")
+
+## **Run non-linear dimensional reduction**
+### Uniform Manifold Approximation and Projection (UMAP) 
+pool_subset <- RunUMAP(pool_subset, dims = 1:25)
+plot2 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, label=T)
+plot2
+plot3 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, group.by="CNA", cols=c("springgreen3", "red3", "black"))
+plot3
 
