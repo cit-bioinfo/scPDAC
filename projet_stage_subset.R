@@ -1,3 +1,9 @@
+#Loading packages----
+library(Seurat)
+library(ggraph)
+library(ggplot2)
+library(clustree)
+
 #Subset of epithelial cells ----
 #It concerns cells of clusters highly rich in tumor cells : n°2, 9, 14, 18, 20, 24, 25. 
 
@@ -34,9 +40,6 @@ pool_subset <- subset(x=pool, idents=c("2", "9", "14", "18", "20", "24", "25"))
 pool_subset
 #11467 cells 
 
-#COMPARER OBJECT DE DÉPART POUR VOIR LES METADATA : que nCount et nFeature et orig.ident
-pool_subset[["percent.mt"]] <- NULL 
-
 #Seurat Pipeline ----
 
 ## **Standard pre-processing workflow - Data filtering**
@@ -66,23 +69,41 @@ pool_subset <- ScoreJackStraw(pool_subset, dims=1:20)
 JackStrawPlot(pool_subset, dims=1:20)
 #0 : p-value is smaller than can be represented in R
 ElbowPlot(pool_subset, ndims = 50, reduction = "pca")
+#gap between pca 17 and 18, dimension = 1:17
 
 ## **Cluster the cell**
-pool_subset <- FindNeighbors(pool_subset, reduction='pca', dims = 1:25)
-pool_subset <- FindClusters(pool_subset, resolution = 0.8) 
+pool_subset <- FindNeighbors(pool_subset, reduction='pca', dims = 1:17)
+pool_subset <- FindClusters(pool_subset, resolution = 0.2) 
 head(pool_subset@meta.data, 5)
+#0.1 : 13 communities
+#0.2 : 16 communities
 
-library(ggraph)
-library(ggplot2)
-library(clustree)
-par(mar=c(5, 5, 5, 5))
-clustree(pool_subset, prefixe="RNA_snn_res")
+clustree(pool_subset, prefixe="RNA_snn_res.0.1")
+
+#pool_subset[["RNA_snn_res.1.5"]] <- NULL 
 
 ## **Run non-linear dimensional reduction**
 ### Uniform Manifold Approximation and Projection (UMAP) 
-pool_subset <- RunUMAP(pool_subset, dims = 1:25)
+pool_subset <- RunUMAP(pool_subset, dims = 1:17)
 plot2 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, label=T)
 plot2
 plot3 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, group.by="CNA", cols=c("springgreen3", "red3", "black"))
 plot3
+
+#Barplots----
+##Data treatment
+write.table(pool_subset@meta.data, file="~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+metadata_pool_subset_analysis <- read.table("~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv", sep="\t", header=F, fill=T)
+metadata_pool_subset_analysis <- metadata_pool_subset[-1,]
+colnames(metadata_pool_subset_analysis) <- c("cell", "orig_ident", "nCount_RNA", "nFeature_RNA", "peng_all_annotations", "infer_CNV", "CNA", "percent_mt", "seurat_clusters", "RNA_snn_res.0.1", "RNA_snn_res.0.2")
+metadata_pool_subset_analysis <- metadata_pool_subset_analysis[, c(1, 2, 3, 4, 5, 12, 6, 7, 8, 9, 10, 11)]
+metadata_pool_subset_analysis <- merge(metadata_pool_subset_analysis, metadata_pool_object, by="cell")
+metadata_pool_subset_analysis[, c(15, 14, 13, 12)] <- NULL
+colnames(metadata_pool_subset_analysis) <- c("cell", "nCount_RNA", "nFeature_RNA",  "percent_mt", "orig_ident", "orig_ident_N_T", "seurat_clusters",  "RNA_snn_res.0.1", "RNA_snn_res.0.2", "peng_all_annotations", "infer_CNV", "CNA")
+head(metadata_pool_subset_analysis)
+
+write.table(metadata_pool_subset_analysis, file="~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv", quote=FALSE, sep="\t", row.names=F)
+load("~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset_analysis.RData")
+
+##Barplots
 
