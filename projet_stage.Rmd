@@ -416,7 +416,6 @@ pheatmap::pheatmap(cellprobs(fit))
 ```
 
 
-
 ### **Using cell labels - pool2**
 ```{r}
 plot5 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="orig.ident")
