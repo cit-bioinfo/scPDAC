@@ -4,8 +4,8 @@ library(ggraph)
 library(ggplot2)
 library(clustree)
 
-load("/home/rose/Documents//projet_stage/data/analysis_pool_subset/pool_subset.RData")
-load("/home/rose/Documents//projet_stage/data/analysis_pool_object/metadata_pool_subset.RData") #object
+load("D:/Stage/Documents/projet_stage/data/analysis_pool_subset/pool_subset.RData")
+load("D:/Stage/Documents/projet_stage/data/analysis_pool_object/metadata_pool_subset.RData") #object
 
 #Subset of epithelial cells ----
 #It concerns cells of clusters highly rich in tumor cells : n°2, 9, 14, 18, 20, 24, 25. 
@@ -57,8 +57,8 @@ pool_subset <- NormalizeData(pool_subset)
 
 ### Identification of highly variable features
 pool_subset <- FindVariableFeatures(object=pool_subset, selection.method = "vst", nfeatures = 2000)
-top10_variablefeatures_subset <- head(VariableFeatures(pool_subset), 10)
-top10_variablefeatures_subset
+top100_variablefeatures_subset <- head(VariableFeatures(pool_subset), 100)
+top100_variablefeatures_subset
 
 ## **Scaling data**
 pool_subset <- ScaleData(pool_subset)
@@ -67,9 +67,9 @@ pool_subset <- ScaleData(pool_subset)
 pool_subset <- RunPCA(pool_subset, features = VariableFeatures(object = pool_subset))
 DimHeatmap(pool_subset, dims=10:20, cells=500, balanced=TRUE)
 
-pool_subset <- JackStraw(pool_subset, num.replicate = 100)
-pool_subset <- ScoreJackStraw(pool_subset, dims=1:20)
-JackStrawPlot(pool_subset, dims=1:20)
+#pool_subset <- JackStraw(pool_subset, num.replicate = 100)
+#pool_subset <- ScoreJackStraw(pool_subset, dims=1:20)
+#JackStrawPlot(pool_subset, dims=1:20)
 #0 : p-value is smaller than can be represented in R
 
 ElbowPlot(pool_subset, ndims = 50, reduction = "pca")
@@ -80,7 +80,7 @@ pool_subset <- FindNeighbors(pool_subset, reduction='pca', dims = 1:17)
 pool_subset <- FindClusters(pool_subset, resolution = 0.5)
 head(pool_subset@meta.data, 5)
 
-clustree(pool_subset, prefixe="RNA_snn_res.0.1")
+#clustree(pool_subset, prefixe="RNA_snn_res.0.1")
 
 #pool_subset[["RNA_snn_res.1.5"]] <- NULL 
 
@@ -105,32 +105,31 @@ summary(Idents(pool_subset))
 #11424 cancer samples
 plot4 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, cols=c("springgreen3", "red3"))
 plot4+ labs(title="UMAP N/T")
-
-
+  
 #Barplots----
 ##Data treatment
 metadata_pool_subset_analysis_4 <- read.table("~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset_4.tsv", sep="\t", header=F, fill=T)
 write.table(pool_subset@meta.data, file="~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset_4.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 metadata_pool_subset_analysis_4 <- metadata_pool_subset_analysis_4[-1,]
 colnames(metadata_pool_subset_analysis_4) <- c("cell","RNA_snn_res.1", "seurat_clusters", "RNA_snn_res.0.5", "RNA_snn_res.0.1", "RNA_snn_res.0.2", "RNA_snn_res.0.3", "RNA_snn_res.0.4", "RNA_snn_res.0.6", "RNA_snn_res.0.7", "RNA_snn_res.0.8", "RNA_snn_res.0.9")
-metadata_pool_subset_analysis <- metadata_pool_subset_analysis[, c(1,13, 14, 15, 16, 17, 18, 5, 6, 7, 8, 4, 9, 10, 11, 12, 2, 3, 19, 20)]
+metadata_pool_subset_analysis <- metadata_pool_subset_analysis[, c(1,3, 4, 5, 6, 7, 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)]
 metadata_pool_subset_analysis <- merge(metadata_pool_subset_analysis_4, metadata_pool_subset_analysis, by="cell")
 metadata_pool_subset_analysis <- metadata_pool_subset_analysis[, -(c(18, 19, 20))]
-colnames(metadata_pool_subset_analysis) <- c("cell", "nCount_RNA", "nFeature_RNA",  "percent_mt", "orig_ident", "orig_ident_N_T", "seurat_clusters",  "RNA_snn_res.0.1", "RNA_snn_res.0.2", "peng_all_annotations", "infer_CNV", "CNA")
+colnames(metadata_pool_subset_analysis) <- c("cell", "nCount_RNA", "nFeature_RNA",  "percent_mt", "orig_ident", "orig_ident_N_T", "my_annotations", "peng_al_annotations",  "RNA_snn_res.0.1", "RNA_snn_res.0.2","RNA_snn_res.0.3", "RNA_snn_res.0.4", "RNA_snn_res_0.5", "RNA_snn_res.0.6", "RNA_snn_res.0.7", "RNA_snn_res.0.8", "RNA_snn_res.0.9", "RNA_snn_res_1", "seurat_clusters", "infer_CNV", "CNA")
 head(metadata_pool_subset_analysis)
 
 metadata_pool_subset_analysis$CNA[is.na(metadata_pool_subset_analysis$CNA)]<- "NA"
-metadata_pool_subset_analysis$infer_CNV[is.na(metadata_pool_subset_analysis$infer_CNV)]<- "NA"
 
 write.table(metadata_pool_subset_analysis, file="~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv", quote=FALSE, sep="\t", row.names=F)
-load("~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.RData") #subset
+metadata_pool_subset_analysis <- read.table("~/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv", sep="\t", header=F, fill=T)
+load("D:/Stage/Documents/projet_stage/data/analysis_pool_subset/metadata_pool_subset.tsv.RData") #subset
 
 ##Barplots
 head(pool_subset@meta.data, 5)
 summary(metadata_pool_subset_analysis)
 
 #clusters / CNA
-clusters_table_CNA <- table(metadata_pool_subset_analysis$CNA, factor(metadata_pool_subset_analysis$RNA_snn_res.0.4, levels=c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19")))
+clusters_table_CNA <- table(metadata_pool_subset_analysis$CNA, factor(metadata_pool_subset_analysis$RNA_snn_res_0.5, levels=c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21")))
 clusters_table_CNA 
 clusters_barplot_CNA <- barplot(clusters_table_CNA, col=c("springgreen3", "red3", "black"), width=.3, beside=TRUE, ylim=c(0, 1000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA", col.main="gray45")
 text(clusters_barplot_CNA, clusters_table_CNA, paste(clusters_table_CNA), cex=0.8, pos=3, col="gray45")
@@ -144,5 +143,45 @@ clusters_proptable_CNA
 clusters_propbarplot_CNA <- barplot(clusters_proptable_CNA, col=c("springgreen3", "red3", "black"), width=.3, beside=TRUE, ylim=c(0, 100), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="clusters_CNA_res_0.5", col.main="gray45")
 text(clusters_propbarplot_CNA,clusters_proptable_CNA, paste(clusters_proptable_CNA), cex=0.8, pos=3, col="gray45")
 
+#peng_al_annotations
+#annotations_table <- table(metadata_pool_subset_analysis$orig_ident_N_T, factor(metadata_pool_subset_analysis$peng_all_annotations, levels=c("Ductal cell type 1", "Ductal cell type 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast cell", "Stellate cell", "Macrophage cell", "T cell", "B cell")))
+#annotations_table 
+#annotations_barplot <- barplot(annotations_table,col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
+#text(annotations_barplot,annotations_table, paste(annotations_table), cex=0.8, pos=3, col="gray45")
+#legend("topright", inset=c(-0.25,-0.05), legend= c("Control samples", "Cancer samples"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+#addmargins(annotations_table)
+#annotations_proptable <- prop.table(annotations_table)*100
+#annotations_proptable <- round(annotations_proptable, 3)
+#annotations_barplot_proptable <- barplot(annotations_proptable,col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 120), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
+#text(annotations_barplot_proptable,annotations_proptable, paste(annotations_proptable), cex=0.8, pos=3, col="gray45")
+#legend("topright", inset=c(-0.25,-0.05), legend= c("Control samples", "Cancer samples"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+#my annotations 
+#annotations_table <- table(metadata_pool_subset_analysis$orig_ident_N_T, factor(metadata_pool_subset_analysis$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast", "Stellate cell", "Macrophage", "T cell", "B cell")))
+#annotations_table 
+#annotations_barplot <- barplot(annotations_table,col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations", col.main="gray45")
+#text(annotations_barplot,annotations_table, paste(annotations_table), cex=0.8, pos=3, col="gray45")
+#legend("topright", inset=c(-0.25,-0.05), legend= c("Control samples", "Cancer samples"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
+
+#addmargins(annotations_table)
+#annotations_proptable <- prop.table(annotations_table)*100
+#annotations_proptable <- round(annotations_proptable, 3)
+#annotations_proptable
+#annotations_barplot_proptable <- barplot(annotations_proptable,col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 120), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="peng_al_annotations", col.main="gray45")
+#text(annotations_barplot_proptable,annotations_proptable, paste(annotations_proptable), cex=0.8, pos=3, col="gray45")
+#legend("topright", inset=c(-0.25,-0.05), legend= c("Control samples", "Cancer samples"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
 
+#Addmodulescore----
+
+?AddModuleScore
+
+load("D:/Stage/Documents/projet_stage/data/signatures/geneSignatures.RData")
+#tumorSig = epithelial cells 
+#ImmunePop and otherSig = all cells 
+head(tumorSig)
+
+pool_subset <- AddModuleScore(pool_subset, tumorSig, name="module_score_tumor_Sig")
+head(pool_subset@meta.data)
+FeaturePlot(object=pool_subset, features="module_score_tumor_Sig1")
