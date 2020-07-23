@@ -176,7 +176,7 @@ text(clusters_propbarplot_CNA,clusters_proptable_CNA, paste(clusters_proptable_C
 #Addmodulescore----
 
 ?AddModuleScore
-
+load("D:/Stage/Desktop/umap.RData")
 load("D:/Stage/Documents/projet_stage/data/signatures/geneSignatures.RData")
 #tumorSig = epithelial cells 
 #ImmunePop and otherSig = all cells 
@@ -184,4 +184,11 @@ head(tumorSig)
 
 pool_subset <- AddModuleScore(pool_subset, tumorSig, name="module_score_tumor_Sig")
 head(pool_subset@meta.data)
-FeaturePlot(object=pool_subset, features="module_score_tumor_Sig1")
+
+par(mfrow=c(1,2))
+plot4 <- FeaturePlot(object=pool_subset, features="module_score_tumor_Sig1", label=TRUE, repel=TRUE)
+plot4
+plot3 <- VlnPlot(pool_subset, features="module_score_tumor_Sig1", pt.size = FALSE)
+plot3 <- plot3+labs(title="CSYNotta.ClassicA")
+plot3
+plot4+plot3
