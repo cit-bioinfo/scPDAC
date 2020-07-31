@@ -617,12 +617,11 @@ write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis_pool_ob
 write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis_pool_object/active_ident_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 ```
 
-#Addmodulescore----
+#**Addmodulescore**
 ```{r}
 load("~/Documents/projet_stage/data/signatures/geneSignatures.RData")
 load("~/Documents/projet_stage/data/data/pool_object.RData")
 
-head(otherSig)
 head(ImmunePop)
 
 #ImmunePop Signatures
@@ -644,11 +643,31 @@ head(pool@meta.data)
 #Average of add_module_score
 metadata <- pool@meta.data
 matrix <- aggregate(list(metadata$module_score_other_Sig1, metadata$module_score_other_Sig2, metadata$module_score_other_Sig3, metadata$module_score_other_Sig4, metadata$module_score_ImmunePop_Sig1, metadata$module_score_ImmunePop_Sig2, metadata$module_score_ImmunePop_Sig3, metadata$module_score_ImmunePop_Sig4, metadata$module_score_ImmunePop_Sig5, metadata$module_score_ImmunePop_Sig6, metadata$module_score_ImmunePop_Sig7, metadata$module_score_ImmunePop_Sig8, metadata$module_score_ImmunePop_Sig9, metadata$module_score_ImmunePop_Sig10), by=list(metadata$seurat_clusters), FUN=median)
-
+t(matrix)
 names(matrix)[15] <- "avg_module_score_ImmunePop_Sig10"
 
-#write_xlsx(matrix,"~/Documents/projet_stage/data/signatures/matrix_avg_module_score.xlsx")
+matrix <- as.data.frame(matrix)
+rownames(matrix) <- matrix$seurat_clusters
+matrix$seurat_clusters <- NULL
+colnames(matrix)
+matrix <- matrix[,-9]
 
+names(matrix)<- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9","10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34")
+matrix <- as.data.frame(t(matrix))
+
+write_xlsx(matrix,"~/Documents/projet_stage/data/signatures/matrix_avg_module_score.xlsx")
 ```
 
+#**Complexheatmap**
+```{r}
+load("~/Documents/projet_stage/data/signatures/avg_module_score.RData")
 
+library(devtools)
+library(usethis)
+install_github("jokergoo/ComplexHeatmap")
+library(ComplexHeatmap)
+library(circlize)
+
+matrix <- as.matrix(matrix)
+heatmap <- Heatmap(matrix)
+```
