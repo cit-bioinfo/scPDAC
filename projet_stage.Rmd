@@ -12,6 +12,9 @@ output: html_document
 
 ## **Loading packages**
 ```{r loading_packages, include=FALSE}
+packageVersion("cellasign")
+version[['version.string']]
+
 library(data.table) #large data
 library(dplyr) #data manipulation
 
@@ -195,7 +198,7 @@ pool <- FindNeighbors(pool, reduction='pca', dims = 1:10)
 
 pool <- FindClusters(pool, resolution = 1) 
 #Res = 0.8 for PDAC samples 
-#Res = 1 for pooled cells from PDACs and controls
+#Res = 1 for pooled cells from PDACs and controls 
 ```
 
 #### Visualization 
@@ -255,7 +258,7 @@ VlnPlot(pool, features = feature, pt.size= FALSE, group.by="seurat_clusters")
 
 ##### Feature plot
 ```{r}
-FeaturePlot(pool, features = feature, label=TRUE, repel=TRUE)
+FeaturePlot(pool,  label=TRUE, repel=TRUE)
 #FeaturePlot(pool, features = feature, reduction = "tsne", label=TRUE, repel=TRUE)
 ```
 
@@ -282,14 +285,14 @@ head(top100.markers)
 Idents(pool) <- "seurat_clusters"
 experiment.merged <- RenameIdents(object = pool, '30'= '0', '31'= '0', '26'= '0', '6' = '1', '8' = '1', '9'= '2', '20'= '2', '25'= '2', '24'= '2', '25'= '2', '18'= '2', '14'= '2', '13'= '3', '29'= '3', '27'= '4', '34'= '4', '12'= '4', '5'= '4', '33'= '4', '32'= '4', '17'='22', '11'='10', '15'='10', '21'='10', '16'='19', '28'='19')
 
-DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "umap")
+DimPlot(object = pool, pt.size=0.5, label = T, reduction = "umap")
 #DimPlot(object = experiment.merged, pt.size=0.5, label = T, reduction = "tsne")
 
 new.cluster.ids <- c("Stellate cell", "Ductal cell 1", "Ductal cell 2", "Macrophage", "Endothelial cell", "Acinar cell", "Fibroblast", "T cell", "B cell", "Endocrine cell")
 names(new.cluster.ids) <- levels(experiment.merged)
 pool <- RenameIdents(experiment.merged, new.cluster.ids)
 
-DimPlot(pool.init, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
+DimPlot(pool, reduction = "umap", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 #DimPlot(pool, reduction = "tsne", pt.size = 0.5, repel=TRUE, label= TRUE) + NoLegend()
 
 #add metadata_peng_all to pool object 
@@ -421,14 +424,14 @@ pheatmap::pheatmap(cellprobs(fit))
 plot5 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="orig.ident")
 plot5
 
-#Idents(pool) <- "orig.ident"
+Idents(pool) <- "orig.ident"
 experiment.merged2 <- RenameIdents(object = pool, 'N11'='N1', 'N10'='N1', 'N9'='N1', 'N8'='N1', 'N7'='N1', 'N6'='N1', 'N5'='N1', 'N4'='N1', 'N3'='N1', 'N2'='N1', 'T2'='T1', 'T3'='T1','T4'='T1','T5'='T1','T6'='T1','T7'='T1','T8'='T1','T9'='T1','T10'='T1','T11'='T1','T12'='T1','T13'='T1','T14'='T1','T15'='T1','T16'='T1','T17'='T1','T18'='T1','T19'='T1','T20'='T1','T21'='T1','T22'='T1','T23'='T1','T24'='T1')
 #plot6 <-DimPlot(object = experiment.merged2, pt.size=0.5, label = T, reduction = "umap")
 new.orig_ident.ids <- c("Control samples", "Cancer samples")
 names(new.orig_ident.ids) <- levels(experiment.merged2)
 pool<- RenameIdents(experiment.merged2, new.orig_ident.ids)
 
-plot6 <- DimPlot(pool2, reduction = "umap", pt.size = 0.5, cols=c("lightblue", "lavender"))
+plot6 <- DimPlot(pool, reduction = "umap", pt.size = 0.5, cols=c("seagreen2", "firebrick3"))
 plot6 
 
 plot7 <- DimPlot(pool2, reduction = "umap", label=TRUE, repel=TRUE, group.by="cluster") + NoLegend()
@@ -612,6 +615,40 @@ legend(0.026, 80, legend=c("Control samples", "Cancer samples", "C99 = 0.0212"),
 write.table(pool@meta.data, file="~/Documents/projet_stage/data/analysis_pool_object/metadata_pool_object_orig_ident.tsv", sep="\t", row.names=T, col.names=T, quote=F)
 
 write.table(pool@active.ident, file="~/Documents/projet_stage/data/analysis_pool_object/active_ident_pool_object.tsv", sep="\t", row.names=T, col.names=T, quote=F)
+```
+
+#Addmodulescore----
+```{r}
+load("~/Documents/projet_stage/data/signatures/geneSignatures.RData")
+load("~/Documents/projet_stage/data/data/pool_object.RData")
+
+head(otherSig)
+head(ImmunePop)
+
+#ImmunePop Signatures
+pool <- AddModuleScore(pool, ImmunePop, name="module_score_ImmunePop_Sig")
+
+head(pool@meta.data)
+
+plot4 <- FeaturePlot(object=pool, features="module_score_ImmunePop_Sig1", label=TRUE, repel=TRUE)
+plot4
+plot3 <- VlnPlot(pool, features="module_score_ImmunePop_Sig1", pt.size = FALSE) + theme(legend.position='none')
+plot3 <- plot3+labs(title="B lineage")
+plot3
+plot4+plot3
+
+#Others signatures
+pool <- AddModuleScore(pool, otherSig, name="module_score_other_Sig")
+head(pool@meta.data)
+
+#Average of add_module_score
+metadata <- pool@meta.data
+matrix <- aggregate(list(metadata$module_score_other_Sig1, metadata$module_score_other_Sig2, metadata$module_score_other_Sig3, metadata$module_score_other_Sig4, metadata$module_score_ImmunePop_Sig1, metadata$module_score_ImmunePop_Sig2, metadata$module_score_ImmunePop_Sig3, metadata$module_score_ImmunePop_Sig4, metadata$module_score_ImmunePop_Sig5, metadata$module_score_ImmunePop_Sig6, metadata$module_score_ImmunePop_Sig7, metadata$module_score_ImmunePop_Sig8, metadata$module_score_ImmunePop_Sig9, metadata$module_score_ImmunePop_Sig10), by=list(metadata$seurat_clusters), FUN=median)
+
+names(matrix)[15] <- "avg_module_score_ImmunePop_Sig10"
+
+#write_xlsx(matrix,"~/Documents/projet_stage/data/signatures/matrix_avg_module_score.xlsx")
+
 ```
 
 
