@@ -158,7 +158,6 @@ text(clusters_propbarplot_CNA,clusters_proptable_CNA, paste(clusters_proptable_C
 #legend("topright", inset=c(-0.25,-0.05), legend= c("Control samples", "Cancer samples"), col =c("springgreen3", "red3"), text.col="gray45", bty="n", pch=20, pt.cex=2, cex=0.8, horiz=F)
 
 #my annotations 
-#annotations_table <- table(metadata_pool_subset_analysis$orig_ident_N_T, factor(metadata_pool_subset_analysis$my_annotations, levels=c("Ductal cell 1", "Ductal cell 2", "Acinar cell", "Endocrine cell", "Endothelial cell", "Fibroblast", "Stellate cell", "Macrophage", "T cell", "B cell")))
 #annotations_table 
 #annotations_barplot <- barplot(annotations_table,col=c("springgreen3", "red3"), width=.3, beside=TRUE, ylim=c(0, 12000), cex.names = 0.8, border=F, font.axis=2, col.axis="gray45", cex.axis=0.8, main="my_annotations", col.main="gray45")
 #text(annotations_barplot,annotations_table, paste(annotations_table), cex=0.8, pos=3, col="gray45")
@@ -176,6 +175,7 @@ text(clusters_propbarplot_CNA,clusters_proptable_CNA, paste(clusters_proptable_C
 #Addmodulescore----
 
 ?AddModuleScore
+load()
 load("D:/Stage/Desktop/umap.RData")
 load("D:/Stage/Documents/projet_stage/data/signatures/geneSignatures.RData")
 #tumorSig = epithelial cells 
@@ -185,6 +185,7 @@ head(tumorSig)
 pool_subset <- AddModuleScore(pool_subset, tumorSig, name="module_score_tumor_Sig")
 head(pool_subset@meta.data)
 
+pool_subset@meta.data[, 10:110] <- NULL
 par(mfrow=c(1,2))
 plot4 <- FeaturePlot(object=pool_subset, features="module_score_tumor_Sig1", label=TRUE, repel=TRUE)
 plot4
@@ -192,3 +193,51 @@ plot3 <- VlnPlot(pool_subset, features="module_score_tumor_Sig1", pt.size = FALS
 plot3 <- plot3+labs(title="CSYNotta.ClassicA")
 plot3
 plot4+plot3
+
+#Average of add_module_score
+metadata_subset <- pool_subset@meta.data
+metadata_subset 
+matrix_subset <- aggregate(list(metadata_subset$module_score_tumor_Sig1, metadata_subset$module_score_tumor_Sig2, metadata_subset$module_score_tumor_Sig3, metadata_subset$module_score_tumor_Sig4, metadata_subset$module_score_tumor_Sig5, metadata_subset$module_score_tumor_Sig6, metadata_subset$module_score_tumor_Sig7, metadata_subset$module_score_tumor_Sig8, metadata_subset$module_score_tumor_Sig9, metadata_subset$module_score_tumor_Sig10), by=list(metadata_subset$seurat_clusters), FUN=median)
+matrix_subset
+rownames(matrix_subset)<- matrix_subset[,1]
+matrix_subset <- t(matrix_subset)
+matrix_subset <- matrix_subset[-1,]
+rownames(matrix_subset) <- c("CSYNotta.ClassicA", "CSYNotta.BasalA", "CSYNotta.ClassicB", "CSYNotta.BasalB", "ICGC.Squamous", "ICGC.Progenitor", "Puleo.Classic", "Puleo.Basal", "PDX.Classic", "PDX.Basal")
+colnames(matrix_subset) <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9","10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21")
+matrix_subset <- as.data.frame(matrix_subset)
+
+write_xlsx(matrix_subset,"~/Documents/projet_stage/data/signatures/matrix_subset_avg_module_score.xlsx")
+
+#ComplexHeatMap
+library(ComplexHeatmap)
+library(circlize)
+
+load("~/Documents/projet_stage/data/signatures/avg_module_score_objet.RData")
+
+max(matrix_subset)
+
+summary(matrix_subset)
+
+matrix_subset <- mapply(matrix_subset, FUN=as.numeric)
+matrix_subset <- matrix(matrix_subset, ncol=22, nrow=10)
+
+matrix_subset <- matrix_subset[c(1, 3, 6, 7, 9, 2, 4, 5, 8, 10),]
+
+#matrix_2
+matrix_2_subset <-  matrix( ncol=, nrow=10)
+matrix_2_subset <- as.data.frame(matrix_2_subset)
+rownames(matrix_2_subset) <- c("CSYNotta.ClassicA", "CSYNotta.BasalA", "CSYNotta.ClassicB", "CSYNotta.BasalB", "ICGC.Squamous", "ICGC.Progenitor", "Puleo.Classic", "Puleo.Basal", "PDX.Classic", "PDX.Basal")
+colnames(matrix_2_subset) <- "Sous Types"
+matrix_2_subset <- matrix_2_subset[c(1, 3, 6, 7, 9, 2, 4, 5, 8, 10),]
+matrix_2_subset[,1] <- c("Classic","Classic","Classic","Classic","Classic","Basal","Basal","Basal","Basal","Basal")
+matrix_2_subset <- as.matrix(matrix_2_subset)
+
+#heatmap
+col = colorRamp2(seq(min(matrix_subset), max(matrix_subset), length=3), c("blue", "white", "red"))
+heatmap_subset <- Heatmap(matrix_subset, name="mat", col=col, column_title="Clusters", column_title_side="top", column_title_gp = gpar(fontsize=15, fontface="bold"), column_dend_height=unit(2, "cm"), column_names_side="top",  column_names_rot=0, row_title ="Signatures", row_title_side="left", row_title_gp = gpar(fontsize=15, fontface="bold"), row_names_side="left", show_column_dend = TRUE, show_row_dend = FALSE, row_order=rownames(matrix_2_subset), row_split=paste0(matrix_2_subset))
+heatmap_subset
+
+
+
+
+
