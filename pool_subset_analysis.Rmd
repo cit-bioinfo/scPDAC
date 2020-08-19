@@ -1,0 +1,112 @@
+---
+title: "pool_analysis"
+author: "Rose-Marie Fraboulet"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Stage M1 - Analyse de l’hétérogénéité tumorale du cancer du pancréas par des approches single-cell**
+
+## **Loading packages**
+```{r , include=FALSE}
+library(Seurat)
+library(ggraph)
+library(ggplot2)
+```
+
+
+## **Loading dataset**
+```{r , include=FALSE}
+#Creation of a new seurat object : subset of cells from specific clusters
+#Idents(pool) <- "seurat_clusters"
+#pool_subset <- subset(x=pool, idents=c("2", "9", "14", "18", "20", "24", "25"))
+#pool_subset
+#11467 cells 
+
+load("~Documents/projet_stage/data/analysis_pool_subset/pool_subset.RData")
+```
+
+## **Standard pre-processing workflow - Data filtering**
+## Calculate the percentage of mitochondrial genes 
+```{r, echo=FALSE}
+pool_subset[["percent.mt"]] <- PercentageFeatureSet(object = pool_subset, pattern = "^MT-")
+head(pool_subset@meta.data, 5)
+```
+
+## **Normalizing data - logNormalize**
+## Normalizing the data
+```{r, echo=FALSE}
+pool_subset <- NormalizeData(pool_subset)
+```
+
+### Identification of highly variable features
+```{r, echo=FALSE}
+pool_subset <- FindVariableFeatures(object=pool_subset, selection.method = "vst", nfeatures = 2000)
+```
+
+## **Scaling data**
+```{r, include=FALSE}
+pool_subset <- ScaleData(pool_subset)
+```
+
+## **Perform linear dimensional reduction**
+### Dataset
+```{r, include=FALSE}
+pool_subset <- RunPCA(pool_subset, features = VariableFeatures(object = pool_subset))
+DimHeatmap(pool_subset, dims=10:20, cells=500, balanced=TRUE)
+```
+
+## **Determine the ‘dimensionality’ of the dataset**
+```{r, include=FALSE}
+ElbowPlot(pool_subset, ndims = 50, reduction = "pca")
+```
+
+## **Cluster the cell**
+### Shared Nearest Neighbor (SNN) Graph
+```{r, echo=FALSE}
+pool_subset <- FindNeighbors(pool_subset, reduction='pca', dims = 1:17)
+pool_subset <- FindClusters(pool_subset, resolution = 0.5)
+```
+
+## **Run non-linear dimensional reduction**
+### Uniform Manifold Approximation and Projection (UMAP) 
+```{r, echo=FALSE}
+pool_subset <- RunUMAP(pool_subset, dims = 1:17)
+plot2 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, label=T)
+plot3 <- DimPlot(pool_subset, reduction="umap", pt.size=0.6, group.by="orig.ident", cols=c("skyblue1", "red2"))
+```
+
+## **Addmodulescore**
+```{r}
+load("~/Documents/projet_stage/data/signatures/geneSignatures.RData")
+
+pool_subset <- AddModuleScore(pool_subset, tumorSig, name="module_score_tumor_Sig")
+
+#plot4 <- FeaturePlot(object=pool_subset, features="module_score_tumor_Sig1", label=TRUE, repel=TRUE)
+#plot4
+#plot3 <- VlnPlot(pool_subset, features="module_score_tumor_Sig1", pt.size = FALSE)
+#plot3 <- plot3+labs(title="CSYNotta.ClassicA")
+#plot3
+
+#Average of add_module_score
+metadata_subset <- pool_subset@meta.data
+metadata_subset 
+matrix_subset <- aggregate(list(metadata_subset$module_score_tumor_Sig1, metadata_subset$module_score_tumor_Sig2, metadata_subset$module_score_tumor_Sig3, metadata_subset$module_score_tumor_Sig4, metadata_subset$module_score_tumor_Sig5, metadata_subset$module_score_tumor_Sig6, metadata_subset$module_score_tumor_Sig7, metadata_subset$module_score_tumor_Sig8, metadata_subset$module_score_tumor_Sig9, metadata_subset$module_score_tumor_Sig10), by=list(metadata_subset$seurat_clusters), FUN=median)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
