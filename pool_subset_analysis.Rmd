@@ -26,7 +26,7 @@ library(ggplot2)
 #pool_subset
 #11467 cells 
 
-load("~Documents/projet_stage/data/analysis_pool_subset/pool_subset.RData")
+load("/home/rose/Documents/projet_stage/data/data/pool_subset.RData")
 ```
 
 ## **Standard pre-processing workflow - Data filtering**
